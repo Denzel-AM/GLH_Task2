@@ -1,0 +1,197 @@
+  /* --- GLOBAL STYLES --- */
+:root {
+    --primary-orange: #f95e34;
+    --btn-filled-light: #e0dedc;
+    --text-white: #ffffff;
+    --text-dark: #333333;
+    --bg-main-light: #fefefc;
+    --footer-bg: #1a2c47;
+    --hero-blur-bg: rgba(224, 94, 52, 0.4); /* Faded orange-ish */
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    color: var(--text-dark);
+}
+
+/* --- NAVBAR STYLES --- */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 8%;
+    background-color: #0b1a2f; /* Deep Dark Blue */
+    color: var(--text-white);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.logo .hub { color: var(--primary-orange); }
+.logo .local { color: var(--text-white); display: inline-block; transform: scaleX(0.9); margin-top: -5px; } /* Slightly compressed vertically for original feel */
+
+.nav-links { display: flex; gap: 20px; }
+.nav-links a { text-decoration: none; color: #a1aab6; font-size: 0.9rem; transition: color 0.3s; }
+.nav-links a:hover { color: var(--text-white); }
+
+.header-actions { display: flex; align-items: center; gap: 15px; }
+
+.search-bar input {
+    background: #e3e8f0;
+    border: none;
+    padding: 10px 15px 10px 40px; /* Space for search icon */
+    border-radius: 20px;
+    width: 250px;
+}
+
+button {
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.btn-filled { background: var(--primary-orange); color: white; border: none; padding: 10px 25px; border-radius: 20px; transition: 0.3s; }
+.btn-filled:hover { background: #e04a25; }
+
+.btn-outline { background: transparent; border: 1px solid #ffffff33; color: var(--text-white); padding: 10px 25px; border-radius: 20px; transition: 0.3s; }
+.btn-outline:hover { background: #ffffff11; border-color: #ffffff; }
+
+/* --- HERO SECTION --- */
+.hero-container {
+    height: 70vh; /* Takes most of the viewport height */
+    position: relative;
+    background-image: url('background_oranges.jpg'); /* Sharp background image */
+    background-size: cover;
+    background-position: center;
+    overflow: hidden; /* Contains the blur pseudo-element */
+    color: var(--text-white);
+}
+
+/* The Blurred Faded Fg effect on the hero only */
+.hero-container::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: inherit; /* Inherits the orange image */
+    filter: blur(25px); /* Creates the intense blur effect */
+    z-index: 1; /* Sits below content */
+    opacity: 0.85; /* Adjust density of the fade */
+}
+
+/* Base fade tint overlay for hero only */
+.hero-container::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--hero-blur-bg); /* Add the brownish/orange tint */
+    z-index: 2; /* Sits above the blur, below content */
+}
+
+.hero-content {
+    position: relative;
+    z-index: 10; /* Lifts content above the blur effect */
+    max-width: 1200px;
+    margin: 0 auto;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 80px;
+    padding: 0 8%;
+}
+
+.hero-text-block h1 {
+    font-size: 3.5rem;
+    line-height: 1.1;
+    margin-bottom: 25px;
+}
+
+.hero-text-block p {
+    font-size: 1.1rem;
+    max-width: 450px;
+    margin-bottom: 40px;
+    color: #e2e2e2;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+/* Shop Now Button (Unique Style) */
+.btn-shop {
+    background-color: var(--btn-filled-light);
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 30px;
+}
+
+/* --- FEATURES SECTION --- */
+.features-section {
+    max-width: 1200px;
+    margin: 80px auto;
+    padding: 0 8%;
+    display: flex;
+    justify-content: space-between;
+    gap: 30px;
+}
+
+.feature-card {
+    background-color: #f7e6db; /* Peach color for features */
+    flex: 1;
+    padding: 40px;
+    border-radius: 12px;
+}
+
+.feature-card h3 { font-size: 1.4rem; color: #4e3621; margin-bottom: 15px; }
+.feature-card p { font-size: 1rem; color: #6e584a; }
+
+/* --- FOOTER STYLES --- */
+.main-footer {
+    background-color: var(--footer-bg);
+    color: #a1aab6;
+    padding: 80px 8% 40px;
+    position: sticky;
+    bottom: 0;
+    z-index: ;
+}
+
+.footer-primary-content {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 80px;
+}
+
+.logo-text { font-size: 2rem; font-weight: 800; color: #a1aab6; }
+.footer-links-column a { display: block; text-decoration: none; color: inherit; margin-bottom: 15px; font-size: 0.9rem; }
+.footer-contact-column h4 { color: #f2f2f2; margin-bottom: 15px; }
+.footer-contact-column p { margin-bottom: 12px; font-size: 0.9rem; }
+.footer-contact-column .icon { color: var(--primary-orange); display: inline-block; width: 25px; }
+
+.footer-legal {
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding-top: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+}
+
+.legal-nav a { text-decoration: none; color: inherit; margin: 0 10px; }
+ 

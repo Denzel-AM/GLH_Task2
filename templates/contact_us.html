@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Search Icon in Input</title>
+<!-- Font Awesome CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+    .search-box {
+        position: relative;
+        width: 250px;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 8px 8px 8px 30px; /* space for icon */
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .search-box .fa-search {
+        position: absolute;
+        left: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #888;
+        pointer-events: none; /* icon won't block clicks */
+    }
+</style>
+</head>
+<body>
+
+<div class="search-box">
+    <i class="fa fa-search"></i>
+    <input type="text" placeholder="Search...">
+</div>
+
+</body>
+</html
