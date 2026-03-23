@@ -1,0 +1,16 @@
+Flask
+Flask-Mail
+Flask-WTF
+Flask-SQLAlchemy
+SQLAlchemy
+psycopg2-binary
+WTForms
+email-validator
+python-dotenv
+stripe
+qrcode
+reportlab
+Werkzeug
+gunicorn
+boto3
+pandas
