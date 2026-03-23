@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% block head %}GreenField Local Hub login{% endblock %}
+
+{% block body %}
+<style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f4f8f4;
+      color: #222;
+    }
+    
+    
+    main {
+      max-width: 500px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      margin-top: 0;
+      color: #000000;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .checkbox {
+      margin-top: 15px;
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      background: #eb5114;
+      color: white;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #ff8d60;
+    }
+    .links {
+      margin-top: 15px;
+      text-align: center;
+    }
+    .links a {
+      color: #ff6a14;
+      text-decoration: none;
+    }
+    .flash {
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 6px;
+    }
+    .flash.success { background: #d4edda; color: #155724; }
+    .flash.danger { background: #f8d7da; color: #721c24; }
+    .flash.warning { background: #fff3cd; color: #856404; }
+  </style>
+
+<style>
+    .container {
+        align-content: center;
+        justify-content: center;
+    }
+    .sections-container {
+        display: flex;
+        justify-content: space-evenly;
+        margin: 300px;
+        gap : 300px;
+    }
+    
+    .right-section {
+        justify-content: center;
+        max-width: 500px;
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        gap : 20px;
+    }
+
+    form input {
+        height: 30px;
+        border-radius: 10px;
+    }
+    
+    #remember-me {
+        display: flex;
+    }
+    
+    .sec-btns {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+    }
+
+    .sec-img img {
+        width: 500px;
+    }
+    .sec-btns button {
+        max-width: 100px;
+        border-radius: 40px;
+    }
+    .btn-outline {
+        background: none;
+        color: orangered;
+        border: solid #eb5114 2px;
+    }
+
+
+
+
+    .flash {
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 6px;
+    }
+    .flash.success { background: #d4edda; color: #155724; }
+    .flash.danger { background: #f8d7da; color: #721c24; }
+    .flash.warning { background: #fff3cd; color: #856404; }
+  </style>
+
+
+
+<div class="container">
+    <section class="sections-container">
+        <div class="left-section">
+            
+            <div class="sec-head">
+                <h1>Login</h1>
+            </div>
+            <div class="sec-img">
+                <img src="/static/images/image.png" alt="">
+            </div>
+            <div class="sec-btns">
+                <button class="btn-filled">Sign Up</button>
+                <button class="btn-outline">Login</button>
+            </div>
+
+        </div>
+
+        <div class="right-section">
+            <h1>Login</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('auth.login') }}">
+        
+        <input type="email" id="email" name="email" placeholder="Email" required>
+
+        
+        <input type="password" id="password" name="password" placeholder="password" required>
+
+        <div class="checkbox">
+            <label>
+                <p id="remember-me">
+                <input type="checkbox" name="remember_me">
+                Remember me
+                </p>
+            
+            </label>
+        </div>
+
+        <button type="submit">Sign In</button>
+        </form>
+
+        <div class="links">
+        <p><a href="{{ url_for('auth.forgot_password') }}">Forgot your password?</a></p>
+        <p>Don’t have an account? <a href="{{ url_for('auth.register') }}">Register here</a></p>
+        </div>
+        </div>
+        
+    </section>
+</div>
+  
+
+
+  
+
+
+{% endblock %}

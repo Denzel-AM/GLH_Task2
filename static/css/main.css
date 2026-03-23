@@ -167,9 +167,10 @@ button {
     background-color: var(--footer-bg);
     color: #a1aab6;
     padding: 80px 8% 40px;
-    position: sticky;
+    position: relative;
     bottom: 0;
     z-index: ;
+    margin-bottom: 0;
 }
 
 .footer-primary-content {
@@ -195,3 +196,31 @@ button {
 
 .legal-nav a { text-decoration: none; color: inherit; margin: 0 10px; }
  
+.search-box {
+        position: relative;
+        width: 250px;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 8px 8px 8px 30px; /* space for icon */
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .search-box .fa-search {
+        position: absolute;
+        left: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #888;
+        pointer-events: none; /* icon won't block clicks */
+    }
+
+
+.nav-links ul {
+    list-style-type: none;
+    display: flex;
+    gap : 20px ;
+}

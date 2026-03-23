@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLH Error Pages</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<style>
+    :root {
+    --primary-green: #2d4a22;
+    --accent-gold: #c5a059;
+    --bg-light: #f9f7f2;
+    --text-main: #4a4a4a;
+    --white: #ffffff;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-main);
+    background-color: var(--bg-light);
+}
+
+/* Navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 5%;
+    background: transparent;
+}
+
+.logo { font-weight: bold; font-size: 24px; color: var(--accent-gold); }
+.nav-links a { margin: 0 15px; text-decoration: none; color: var(--text-main); }
+
+/* Common Buttons */
+button {
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.btn-filled { background: var(--primary-green); color: white; border: none; }
+.btn-outline { background: transparent; border: 1px solid #ddd; color: var(--text-main); }
+
+/* 404 Layout (Split) */
+.type-404 {
+    display: flex;
+    justify-content: center;
+    padding: 80px 5%;
+}
+
+.error-content {
+    display: flex;
+    max-width: 1100px;
+    align-items: center;
+    gap: 60px;
+}
+
+.placeholder-img {
+    width: 400px;
+    height: 400px;
+    background: #e9e6dd;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 100px;
+}
+
+.error-text h1 { font-size: 48px; color: var(--primary-green); margin-bottom: 10px; }
+.error-text h1 span { font-style: italic; color: var(--primary-green); }
+.error-code { color: var(--accent-gold); letter-spacing: 2px; font-weight: bold; }
+
+.suggestion-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.suggestion-grid a {
+    padding: 10px;
+    border: 1px solid #eee;
+    text-decoration: none;
+    color: var(--text-main);
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* 500 Layout (Centered/Dark) */
+.type-500 {
+    background-color: var(--primary-green);
+    color: var(--white);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.type-500 h1 { color: white; font-size: 52px; }
+.type-500 h1 span { color: var(--accent-gold); font-style: italic; }
+.type-500 .error-code { color: #a3b899; }
+
+.status-board {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    gap: 30px;
+    padding: 20px 40px;
+    border-radius: 15px;
+    margin-top: 40px;
+}
+
+.dot {
+    height: 8px;
+    width: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-bottom: 5px;
+}
+.green { background-color: #4ade80; }
+.red { background-color: #f87171; }
+.orange { background-color: #fbbf24; }
+
+.btn-white { background: white; color: var(--primary-green); border: none; }
+.btn-outline-white { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; }
+</style>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">GLH</div>
+        <div class="nav-links">
+            <a href="#">Home</a>
+            <a href="#">Shop</a>
+            <a href="#">Producers</a>
+            <a href="#">About</a>
+        </div>
+        <div class="nav-auth">
+            <button class="btn-outline">Log in</button>
+            <button class="btn-filled">Sign up</button>
+        </div>
+    </nav>
+
+    <main class="error-container type-404">
+        <div class="error-content">
+            <div class="error-image">
+                <div class="placeholder-img">🌾❓</div>
+            </div>
+            <div class="error-text">
+                <p class="error-code">404 — PAGE NOT FOUND</p>
+                <h1>Lost in the <span>field?</span></h1>
+                <p class="description">This page seems to have been picked before it was ready — or it never grew here at all. Don't worry, there's plenty more to harvest back at the market.</p>
+                
+                <div class="action-buttons">
+                    <button class="btn-filled">Back to Home</button>
+                    <button class="btn-outline">Browse the Shop</button>
+                </div>
+
+                <div class="suggestions">
+                    <p class="suggestion-title">YOU MIGHT BE LOOKING FOR</p>
+                    <div class="suggestion-grid">
+                        <a href="#">My Account</a>
+                        <a href="#">Order History</a>
+                        <a href="#">Loyalty Rewards</a>
+                        <a href="#">Contact Us</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <main class="error-container type-500">
+        <div class="error-content-centered">
+            <div class="icon-badge">🥀</div>
+            <p class="error-code">500 — SERVER ERROR</p>
+            <h1>Something <span>wilted</span> on our end</h1>
+            <p class="description">Our servers hit an unexpected frost. The team has been alerted and is already working to revive things. Your data is safe — please try again in a moment.</p>
+            
+            <div class="action-buttons">
+                <button class="btn-white">Try Again</button>
+                <button class="btn-outline-white">Go Home</button>
+            </div>
+
+            <div class="status-board">
+                <div class="status-item"><span class="dot green"></span> Shop<br><small>Operational</small></div>
+                <div class="status-item"><span class="dot red"></span> Checkout<br><small>Disrupted</small></div>
+                <div class="status-item"><span class="dot green"></span> Accounts<br><small>Operational</small></div>
+                <div class="status-item"><span class="dot orange"></span> Delivery<br><small>Degraded</small></div>
+                <div class="status-item"><span class="dot green"></span> Payments<br><small>Operational</small></div>
+            </div>
+            <p class="footer-ref">Error reference: GLH-ERR-20260316-0823 · <a href="#">View status page →</a></p>
+        </div>
+    </main>
+
+</body>
+</html>

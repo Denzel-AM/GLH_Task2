@@ -1,0 +1,12 @@
+
+.hero-container {
+    background-image: url(/static/images/zoshua-colah-s4u1iKwokcc-unsplash.jpg);
+    justify-content: center;
+}
+
+.hero-image-display {
+    width: 30%;
+    height: 500px;
+    align-content: center;
+    margin-bottom: 300px;
+}

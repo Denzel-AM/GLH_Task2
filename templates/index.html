@@ -1,37 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GreenField Local Hub</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-</head>
-<body>
-
-    <header class="navbar">
-        <div class="logo">
-            <span class="hub">GreenField</span><br>
-            <span class="local">Local Hub</span>
-        </div>
-        <nav class="nav-links">
-            <a href="#">Home</a>
-            <a href="#">Producers</a>
-            <a href="#">Shop</a>
-            <a href="#">Privacy</a>
-            <a href="#">Contact</a>
-            <a href="#">About</a>
-        </nav>
-        <div class="header-actions">
-            <div class="search-bar">
-                <input type="text" placeholder="Search">
-            </div>
-            <button class="btn-filled">Sign Up</button>
-            <button class="btn-outline">Login</button>
-        </div>
-    </header>
-
+{% extends "base.html" %}
+{% block head %}GreenField Local Hub{% endblock %}
+{% block body %}
+<link rel="stylesheet" href="/static/css/index.css">
     <main class="hero-container">
         <div class="hero-content">
             <div class="hero-text-block">
@@ -45,7 +15,7 @@
                 </div>
             </div>
             <div class="hero-image-display">
-                <img src="hero_display_image.jpg" alt="Local produce display">
+                <img src="/static/images/gemma-c-stpjHJGqZyw-unsplash.jpg" alt="Local produce display">
             </div>
         </div>
     </main>
@@ -65,30 +35,4 @@
         </div>
     </section>
 
-    <footer class="main-footer">
-        <div class="footer-primary-content">
-            <div class="logo-text">GHL</div>
-            <div class="footer-links-column">
-                <a href="#">About</a>
-                <a href="#">Our team</a>
-                <a href="#">Customer Care</a>
-            </div>
-            <div class="footer-contact-column">
-                <h4>Reach us</h4>
-                <p><span class="icon">📞</span> +1012 3456 789</p>
-                <p><span class="icon">✉️</span> enquiries@glh.co.uk</p>
-                <p><span class="icon">📍</span> 132 Dartmouth Street, Bletchley,<br>United Kingdom</p>
-            </div>
-        </div>
-        <div class="footer-legal">
-            <nav class="legal-nav">
-                <a href="#">Terms & Conditions</a> |
-                <a href="#">Privacy Policy</a> |
-                <a href="#">Legal</a>
-            </nav>
-            <p class="copyright">&copy; GLH 2026. All right reserved</p>
-        </div>
-    </footer>
-
-</body>
-</html>
+    {% endblock %}
