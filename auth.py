@@ -196,7 +196,7 @@ def register():
         dob_str          = request.form.get("dob", "").strip()
         address          = request.form.get("address", "").strip()
         password         = request.form.get("password", "")
-        confirm_password = request.form.get("confirm_password", "")
+        confirm_password = request.form.get("confirmpassword", "")
 
         ctx = {"nav_links": NAV["register"]}   # shorthand for re-renders
 
@@ -257,8 +257,8 @@ def register():
         db.session.flush()   # get new_user.id before committing
 
         # Every new customer gets a Loyalty account starting at 0 points
-        #loyalty = Loyalty(user_id=new_user.id, points=0)
-        #db.session.add(loyalty)
+        loyalty = Loyalty(user_id=new_user.id, points=0)
+        db.session.add(loyalty)
 
         db.session.commit()
 
