@@ -1,44 +1,190 @@
 {% extends "base.html" %}
-{% block head %}GreenField Local Hub{% endblock %}
+{% block head %}GreenField Local Hub - Sign Up{% endblock %}
 
 {% block body %}
+<style>
+    :root {
+        --primary-orange: #f26532;
+        --hover-orange: #ff8d60;
+        --text-grey: #666;
+    }
 
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #ffffff;
+        margin: 0;
+    }
 
-  <main>
-    <h1>Create Account</h1>
+    .signup-container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        max-width: 1100px;
+        margin: 60px auto;
+        gap: 80px;
+        padding: 0 20px;
+    }
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="flash {{ category }}">{{ message }}</div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
+    /* Left Section */
+    .hero-section {
+        flex: 1;
+    }
 
-    <form method="POST" action="{{ url_for('auth.register') }}">
-      <label for="name">Full Name</label>
-      <input type="text" id="name" name="name" required>
+    .hero-section h1 {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 20px;
+        color: #1a1a1a;
+    }
 
-      <label for="email">Email Address</label>
-      <input type="email" id="email" name="email" required>
+    .hero-image img {
+        width: 100%;
+        max-width: 450px;
+        border-radius: 20px;
+        margin-bottom: 30px;
+    }
 
-      <label for="phone">Phone Number</label>
-      <input type="text" id="phone" name="phone">
+    .hero-buttons {
+        display: flex;
+        gap: 15px;
+    }
 
-      <label for="dob">Date of Birth</label>
-      <input type="date" id="dob" name="dob" required>
+    .btn-pill-outline, .btn-pill-filled {
+        padding: 10px 40px;
+        border-radius: 25px;
+        font-weight: bold;
+        text-decoration: none;
+        font-size: 14px;
+        transition: 0.3s;
+    }
 
-      <label for="address">Address</label>
-      <textarea id="address" name="address" required></textarea>
+    .btn-pill-outline {
+        border: 1.5px solid var(--primary-orange);
+        color: var(--primary-orange);
+    }
 
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" required>
+    .btn-pill-filled {
+        background: var(--primary-orange);
+        color: white;
+        border: none;
+    }
 
-      <label for="confirm_password">Confirm Password</label>
-      <input type="password" id="confirm_password" name="confirm_password" required>
+    /* Right Section (Form) */
+    .form-section {
+        flex: 1;
+        max-width: 400px;
+    }
 
-      <button type="submit">Register</button>
-    </form>
-  </main>
+    .form-section h2 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
 
-  {% endblock %}
+    .form-section p.subtitle {
+        font-size: 0.8rem;
+        color: var(--text-grey);
+        margin-bottom: 25px;
+    }
+
+    .signup-form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .signup-form input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 13px;
+        box-sizing: border-box;
+    }
+
+    .signup-form input::placeholder {
+        color: #999;
+    }
+
+    .submit-btn {
+        background-color: var(--primary-orange);
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 10px;
+        font-size: 15px;
+    }
+
+    .login-footer {
+        text-align: center;
+        margin-top: 15px;
+        font-size: 0.75rem;
+        color: #333;
+    }
+
+    .login-footer a {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    /* Flash Messages */
+    .flash {
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        font-size: 0.9rem;
+    }
+    .flash.danger { background: #f8d7da; color: #721c24; }
+</style>
+
+<div class="signup-container">
+    <div class="hero-section">
+        <h1>Sign Up</h1>
+        <div class="hero-image">
+            <img src="/static/images/image.png" alt="Security Lock">
+        </div>
+        <div class="hero-buttons">
+            <a href="#" class="btn-pill-outline">Sign Up</a>
+            <a href="{{ url_for('auth.login') }}" class="btn-pill-filled">Login</a>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <h2>Sign up !</h2>
+        <p class="subtitle">Create account by filling the form below .</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form class="signup-form" method="POST" action="{{ url_for('auth.register') }}">
+            <input type="text" name="name" placeholder="Enter name" required>
+            <input type="email" name="email" placeholder="Enter email" required>
+            <input type="text" name="phone" placeholder="Enter phone number">
+            <input type="text" name="dob" placeholder="Enter D.O.B" onfocus="(this.type='date')">
+            <input type="text" name="address" placeholder="Enter Address number" required>
+            <input type="password" name="password" placeholder="Enter Password" required>
+            <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+            
+            <button type="submit" class="submit-btn">Signup</button>
+            
+            <div class="login-footer">
+                Do you have already have account ? <a href="{{ url_for('auth.login') }}">LOGIN</a>
+            </div>
+        </form>
+    </div>
+</div>
+<script src="{{ url_for('static', filename='js/register.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="/static/js/register.js"></script>
+<script src="/static/js/main.js"></script>
+<script></script>
+{% endblock %}

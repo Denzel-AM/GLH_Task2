@@ -10,10 +10,27 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
 from config import get_config
+from flask_login import (
+    LoginManager, login_user, login_required,
+    logout_user, current_user,
+)
 
+from auth import auth_bp
+
+
+# import your auth blueprint
+from auth import auth_bp, login_manager
 
 app = Flask(__name__)
 get_config(app)
+
+# --- register blueprint ---
+app.register_blueprint(auth_bp)
+
+
+# --- setup login manager ---
+login_manager.init_app(app)
+login_manager.login_view = "auth.login"
 
 with app.app_context():
     db.create_all()
@@ -25,13 +42,16 @@ nav_links = [
     {"name": "Privacy", "url": "/privacy"},
     {"name": "Dashboard", "url": "/dashboard"},
     {"name": "Login", "url": "/login"},
+    {"name": "Producers", "url": "/producers"},
+    {"name": "Shop", "url": "/shop"},
+    {"name": "Contact", "url": "contact-us"},
     {"name": "Register", "url": "/register"},
     {"name": "Logout", "url": "/logout"},
     ]
 
-home_links = [nav_links[i] for i in ( 1, 2)]  # Home, About Us, Privacy
-login_nav_links = [nav_links[i] for i in (0, 1, 5, 2)]
-register_links = [nav_links[i] for i in (0, 1, 2, 4)]  # Home, About Us, Privacy, Login
+home_links = [nav_links[i] for i in ( 0,1, 2,3,4)]  # Home, About Us, Privacy
+login_nav_links = [nav_links[i] for i in (0, 1, 5, 2,5)]
+register_links = [nav_links[i] for i in (0, 1, 2, 5,6 , 7)]  # Home, About Us, Privacy, Login
 admin_nav_links = nav_links  # All links for admin
 dashboard_nav_links = [nav_links[i] for i in (0, 6)]
 
@@ -44,30 +64,32 @@ with app.app_context():
 #----- home route----
 @app.route('/')
 def home():
-    return render_template('index.html', nav_links=home_links)
+    return render_template('index.html', nav_links=register_links)
 
 @app.route('/about')
 def about():
-    return render_template('about.html', nav_links=home_links)
+    return render_template('about.html', nav_links=register_links)
 
 @app.route('/privacy')
 def privacy():
-    return render_template('privacy.html', nav_links=home_links)
+    return render_template('privacy.html', nav_links=register_links)
 
 @app.route('/contact-us')
 def contact_us():
-    return render_template('contact_us.html', nav_links=home_links)
+    return render_template('contact_us.html', nav_links=register_links)
 
 
 @app.route('/login')
 def login():
-    return render_template('auth/login.html', nav_links=home_links)
+    return render_template('auth/login.html', nav_links=register_links)
 
 @app.route('/register')
 def register():
-    return render_template('auth/register.html', nav_links=home_links)
+    return render_template('auth/register.html', nav_links=register_links)
 
-
+@app.route('/shop')
+def shop():
+    return render_template('shop.html', nav_links=shop_links)
 
 @app.route('/dashboard')
 
@@ -85,6 +107,9 @@ def failure():
     flash('sorry bro you aint got it like that', 'danger')
     return render_template('500.html')
 
+@app.route('/producers')
+def producers():
+    return render_template('producers.html', nav_links=register_links)
 
 
 @app.route('/logout')

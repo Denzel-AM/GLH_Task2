@@ -9,8 +9,9 @@ from flask_login import (
     LoginManager, login_user, login_required,
     logout_user, current_user,
 )
+from flask_login import UserMixin
 
-from models import db, User, Loyalty, Producer, Role
+from models import db, User
 
 
 
@@ -45,8 +46,6 @@ def unauthorized():
     return redirect(url_for("auth.login"))
 
 
-─────────────────────────────────────────────────────────────────────────────
-
 _ALL_NAV = [
     {"name": "Home",        "url": "/"},
     {"name": "About Us",    "url": "/about-us"},
@@ -70,9 +69,11 @@ NAV = {
 
 def nav_for(user=None) -> list:
     """Return the correct nav link set for the given user (or anonymous)."""
-    if user is None or not user.is_authenticated:
-        return NAV["public"]
-    if user.is_admin:
+    if user.role ==  "customer" :
+        return NAV["dashboard"]
+    if user.role == "producer":
+        return NAV["dashboard"]
+    if user.role == "admin":
         return NAV["admin"]
     return NAV["dashboard"]
 
@@ -124,9 +125,9 @@ def validate_dob(dob_str: str) -> tuple[date | None, str | None]:
 
 def _dashboard_url_for(user: User) -> str:
     """Return the correct post-login redirect endpoint for a given user."""
-    if user.is_admin:
+    if user.role == "admin":
         return url_for("admin.dashboard")
-    if user.is_producer:
+    if user.role == "producer":
         return url_for("producer.dashboard")
     return url_for("customer.dashboard")
 
@@ -155,11 +156,11 @@ def login():
 
         if not user or not user.check_password(password):
             flash("Invalid email or password.", "danger")
-            return render_template("login.html", nav_links=NAV["login"])
+            return render_template("auth/login.html", nav_links=NAV["login"])
 
         if not user.is_active:
             flash("Your account has been deactivated. Please contact support.", "warning")
-            return render_template("login.html", nav_links=NAV["login"])
+            return render_template("auth/login.html", nav_links=NAV["login"])
 
         # --- Login ---
         login_user(user, remember=remember)
@@ -172,7 +173,7 @@ def login():
         next_page = request.args.get("next")
         return redirect(next_page or _dashboard_url_for(user))
 
-    return render_template("login.html", nav_links=NAV["login"])
+    return render_template("auth/login.html", nav_links=NAV["login"])
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -202,37 +203,37 @@ def register():
         # ── Name ─────────────────────────────────────────────────────────────
         if not name or len(name) < 2:
             flash("Please enter a valid full name (at least 2 characters).", "danger")
-            return render_template("register.html", **ctx)
+            return render_template("auth/register.html", **ctx)
 
         # Allow spaces and hyphens for compound names (e.g. "Mary-Jane")
         if not re.match(r"^[A-Za-z][A-Za-z '-]{1,}$", name):
             flash("Name must contain only letters, spaces, hyphens, or apostrophes.", "danger")
-            return render_template("register.html", **ctx)
+            return render_template("auth/register.html", **ctx)
 
         # ── Email ─────────────────────────────────────────────────────────────
         if not email:
             flash("An email address is required.", "danger")
-            return render_template("register.html", **ctx)
+            return render_template("auth/register.html", **ctx)
 
         if User.query.filter_by(email=email).first():
             flash("That email is already registered. Please log in or use a different address.", "danger")
-            return render_template("register.html", **ctx)
+            return render_template("auth/register.html", **ctx)
 
         # ── Date of Birth ─────────────────────────────────────────────────────
         dob, dob_error = validate_dob(dob_str)
         if dob_error:
             flash(dob_error, "danger")
-            return render_template("register.html", **ctx)
+            return render_template("auth/register.html", **ctx)
 
         # ── Address ───────────────────────────────────────────────────────────
         if not address or len(address) < 5:
             flash("Please enter a valid delivery address (at least 5 characters).", "danger")
-            return render_template("register.html", **ctx)
+            return render_template("auth/register.html", **ctx)
 
         # ── Password ──────────────────────────────────────────────────────────
         if password != confirm_password:
             flash("Passwords do not match.", "danger")
-            return render_template("register.html", **ctx)
+            return render_template("auth/register.html", **ctx)
 
         if not is_valid_password(password):
             flash(
@@ -240,7 +241,7 @@ def register():
                 "a lowercase letter, a number, and a special character.",
                 "danger",
             )
-            return render_template("register.html", **ctx)
+            return render_template("auth/register.html", **ctx)
 
         # ── Create user and linked loyalty account ────────────────────────────
         new_user = User(
@@ -248,7 +249,7 @@ def register():
             email   = email,
             phone   = phone or None,
             address = address,
-            role    = Role.CUSTOMER,
+            #role    = Role.CUSTOMER,
         )
         new_user.set_password(password)
 
@@ -256,15 +257,15 @@ def register():
         db.session.flush()   # get new_user.id before committing
 
         # Every new customer gets a Loyalty account starting at 0 points
-        loyalty = Loyalty(user_id=new_user.id, points=0)
-        db.session.add(loyalty)
+        #loyalty = Loyalty(user_id=new_user.id, points=0)
+        #db.session.add(loyalty)
 
         db.session.commit()
 
         flash("Registration successful! Please log in.", "success")
         return redirect(url_for("auth.login"))
 
-    return render_template("register.html", nav_links=NAV["register"])
+    return render_template("auth/register.html", nav_links=NAV["register"])
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -277,4 +278,3 @@ def logout():
     logout_user()
     flash("You have been logged out successfully.", "success")
     return redirect(url_for("auth.login"))
-

@@ -1,226 +1,258 @@
-  /* --- GLOBAL STYLES --- */
 :root {
-    --primary-orange: #f95e34;
-    --btn-filled-light: #e0dedc;
+    --brand-navy: #23394d;
+    --brand-orange: #f26532;
+    --brand-orange-hover: #ff8d60;
     --text-white: #ffffff;
-    --text-dark: #333333;
-    --bg-main-light: #fefefc;
-    --footer-bg: #1a2c47;
-    --hero-blur-bg: rgba(224, 94, 52, 0.4); /* Faded orange-ish */
+    --text-muted: #a0aec0;
 }
 
-* {
-    box-sizing: border-box;
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: #ffffff;
+    color: #333;
+}
+
+/* --- Navbar Styling --- */
+.navbar {
+    background-color: var(--brand-navy);
+    padding: 15px 50px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text-white);
+}
+
+.logo {
+    line-height: 1;
+}
+
+.logo .hub {
+    color: var(--brand-orange);
+    font-weight: 800;
+    font-size: 1.5rem;
+}
+
+.logo .local {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.nav-links ul {
+    list-style: none;
+    display: flex;
+    gap: 25px;
     margin: 0;
     padding: 0;
 }
 
-body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    line-height: 1.6;
-    color: var(--text-dark);
-}
-
-/* --- NAVBAR STYLES --- */
-.navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 8%;
-    background-color: #0b1a2f; /* Deep Dark Blue */
+.nav-links a {
     color: var(--text-white);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
-
-.logo {
-    font-size: 1.5rem;
-    font-weight: bold;
-}
-
-.logo .hub { color: var(--primary-orange); }
-.logo .local { color: var(--text-white); display: inline-block; transform: scaleX(0.9); margin-top: -5px; } /* Slightly compressed vertically for original feel */
-
-.nav-links { display: flex; gap: 20px; }
-.nav-links a { text-decoration: none; color: #a1aab6; font-size: 0.9rem; transition: color 0.3s; }
-.nav-links a:hover { color: var(--text-white); }
-
-.header-actions { display: flex; align-items: center; gap: 15px; }
-
-.search-bar input {
-    background: #e3e8f0;
-    border: none;
-    padding: 10px 15px 10px 40px; /* Space for search icon */
-    border-radius: 20px;
-    width: 250px;
-}
-
-button {
-    cursor: pointer;
-    font-size: 0.9rem;
+    text-decoration: none;
+    font-size: 0.95rem;
     font-weight: 500;
+    transition: color 0.3s;
 }
 
-.btn-filled { background: var(--primary-orange); color: white; border: none; padding: 10px 25px; border-radius: 20px; transition: 0.3s; }
-.btn-filled:hover { background: #e04a25; }
-
-.btn-outline { background: transparent; border: 1px solid #ffffff33; color: var(--text-white); padding: 10px 25px; border-radius: 20px; transition: 0.3s; }
-.btn-outline:hover { background: #ffffff11; border-color: #ffffff; }
-
-/* --- HERO SECTION --- */
-.hero-container {
-    height: 70vh; /* Takes most of the viewport height */
-    position: relative;
-    background-image: url('background_oranges.jpg'); /* Sharp background image */
-    background-size: cover;
-    background-position: center;
-    overflow: hidden; /* Contains the blur pseudo-element */
-    color: var(--text-white);
+.nav-links a:hover {
+    color: var(--brand-orange);
 }
 
-/* The Blurred Faded Fg effect on the hero only */
-.hero-container::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-image: inherit; /* Inherits the orange image */
-    filter: blur(25px); /* Creates the intense blur effect */
-    z-index: 1; /* Sits below content */
-    opacity: 0.85; /* Adjust density of the fade */
-}
-
-/* Base fade tint overlay for hero only */
-.hero-container::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: var(--hero-blur-bg); /* Add the brownish/orange tint */
-    z-index: 2; /* Sits above the blur, below content */
-}
-
-.hero-content {
-    position: relative;
-    z-index: 10; /* Lifts content above the blur effect */
-    max-width: 1200px;
-    margin: 0 auto;
-    height: 100%;
+/* Search Box */
+.header-actions {
     display: flex;
-    justify-content: center;
     align-items: center;
-    gap: 80px;
-    padding: 0 8%;
-}
-
-.hero-text-block h1 {
-    font-size: 3.5rem;
-    line-height: 1.1;
-    margin-bottom: 25px;
-}
-
-.hero-text-block p {
-    font-size: 1.1rem;
-    max-width: 450px;
-    margin-bottom: 40px;
-    color: #e2e2e2;
-}
-
-.hero-buttons {
-    display: flex;
     gap: 15px;
 }
 
-/* Shop Now Button (Unique Style) */
-.btn-shop {
-    background-color: var(--btn-filled-light);
-    color: var(--text-dark);
+.search-box {
+    position: relative;
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 5px 15px;
     display: flex;
     align-items: center;
-    gap: 10px;
+}
+
+.search-box input {
     border: none;
-    padding: 15px 30px;
-    border-radius: 30px;
+    outline: none;
+    padding: 5px;
+    font-size: 0.9rem;
+    width: 150px;
 }
 
-/* --- FEATURES SECTION --- */
-.features-section {
-    max-width: 1200px;
-    margin: 80px auto;
-    padding: 0 8%;
-    display: flex;
-    justify-content: space-between;
-    gap: 30px;
+/* Global Buttons */
+.btn-filled {
+    background-color: var(--brand-orange);
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
 }
 
-.feature-card {
-    background-color: #f7e6db; /* Peach color for features */
-    flex: 1;
-    padding: 40px;
-    border-radius: 12px;
+.btn-filled:hover {
+    background-color: var(--brand-orange-hover);
 }
 
-.feature-card h3 { font-size: 1.4rem; color: #4e3621; margin-bottom: 15px; }
-.feature-card p { font-size: 1rem; color: #6e584a; }
+.btn-outline {
+    background: transparent;
+    color: white;
+    border: 1px solid var(--brand-orange);
+    padding: 10px 25px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
 
-/* --- FOOTER STYLES --- */
+.btn-outline:hover {
+    background: rgba(242, 101, 50, 0.1);
+}
+
+/* --- Footer Styling --- */
 .main-footer {
-    background-color: var(--footer-bg);
-    color: #a1aab6;
-    padding: 80px 8% 40px;
-    position: relative;
-    bottom: 0;
-    z-index: ;
-    margin-bottom: 0;
+    background-color: var(--brand-navy);
+    color: var(--text-white);
+    padding: 60px 80px 30px;
+    margin-top: 50px;
 }
 
 .footer-primary-content {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 80px;
+    margin-bottom: 40px;
 }
 
-.logo-text { font-size: 2rem; font-weight: 800; color: #a1aab6; }
-.footer-links-column a { display: block; text-decoration: none; color: inherit; margin-bottom: 15px; font-size: 0.9rem; }
-.footer-contact-column h4 { color: #f2f2f2; margin-bottom: 15px; }
-.footer-contact-column p { margin-bottom: 12px; font-size: 0.9rem; }
-.footer-contact-column .icon { color: var(--primary-orange); display: inline-block; width: 25px; }
+.logo-text {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--text-white);
+}
 
+.logo-text::after {
+    content: 'L';
+    color: var(--brand-orange);
+}
+
+.footer-links-column, .footer-contact-column {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.footer-links-column a {
+    color: var(--text-white);
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.footer-contact-column h4 {
+    margin: 0 0 10px 0;
+    font-size: 1.1rem;
+}
+
+.footer-contact-column p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Legal Bottom Bar */
 .footer-legal {
-    border-top: 1px solid rgba(255,255,255,0.05);
+    border-top: 1px solid rgba(255,255,255,0.1);
     padding-top: 30px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 0.8rem;
+    color: var(--text-muted);
 }
 
-.legal-nav a { text-decoration: none; color: inherit; margin: 0 10px; }
- 
-.search-box {
-        position: relative;
-        width: 250px;
+.legal-nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    margin: 0 10px;
+}
+
+/* Flash Messages */
+.flash-container {
+    padding: 20px 50px;
+}
+.flash {
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+.flash-success { background: #d4edda; color: #155724; }
+.flash-danger { background: #f8d7da; color: #721c24; }
+
+
+/* Hide mobile elements by default */
+.menu-toggle, .mobile-only {
+    display: none;
+}
+
+/* --- Mobile Styles --- */
+@media (max-width: 768px) {
+    .desktop-only {
+        display: none;
     }
 
-    .search-box input {
-        width: 100%;
-        padding: 8px 8px 8px 30px; /* space for icon */
-        font-size: 16px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
+    .menu-toggle {
+        display: block;
+        cursor: pointer;
     }
 
-    .search-box .fa-search {
+    .menu-toggle .bar {
+        display: block;
+        width: 25px;
+        height: 3px;
+        margin: 5px auto;
+        background-color: white;
+        transition: all 0.3s ease-in-out;
+    }
+
+    .nav-links {
         position: absolute;
-        left: 8px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #888;
-        pointer-events: none; /* icon won't block clicks */
+        top: 70px; /* Adjust based on your header height */
+        left: -100%; /* Hidden by default */
+        flex-direction: column;
+        background-color: var(--brand-navy);
+        width: 100%;
+        text-align: center;
+        transition: 0.3s;
+        box-shadow: 0 10px 27px rgba(0, 0, 0, 0.05);
+        z-index: 1000;
     }
 
+    .nav-links.active {
+        left: 0;
+    }
 
-.nav-links ul {
-    list-style-type: none;
-    display: flex;
-    gap : 20px ;
+    .nav-links ul {
+        flex-direction: column;
+        padding: 20px 0;
+    }
+
+    .nav-links li {
+        margin: 15px 0;
+    }
+
+    .mobile-only {
+        display: block;
+        padding: 0 20px;
+    }
+
+    /* Animate Hamburger to X */
+    .menu-toggle.is-active .bar:nth-child(2) { opacity: 0; }
+    .menu-toggle.is-active .bar:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+    .menu-toggle.is-active .bar:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
 }

@@ -1,12 +1,129 @@
-
-.hero-container {
-    background-image: url(/static/images/zoshua-colah-s4u1iKwokcc-unsplash.jpg);
-    justify-content: center;
+:root {
+    --primary-orange: #f26532;
+    --card-peach: #fcd9b8;
 }
 
-.hero-image-display {
-    width: 30%;
-    height: 500px;
-    align-content: center;
-    margin-bottom: 300px;
+body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Hero Section with Background Image */
+.hero-section {
+    position: relative;
+    height: 600px;
+    background: url('/static/images/zoshua-colah-s4u1iKwokcc-unsplash.jpg') center/cover no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Glassmorphism Effect */
+.glass-container {
+    background: rgba(190, 80, 20, 0.6); /* Tinted orange-brown */
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border-radius: 30px;
+    width: 100%;
+    max-width: 1100px;
+    padding: 60px;
+    color: white;
+}
+
+.hero-content {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+}
+
+.hero-text {
+    flex: 1.2;
+}
+
+.hero-text h1 {
+    font-size: 3.5rem;
+    margin: 0 0 20px 0;
+    line-height: 1.1;
+}
+
+.hero-text p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 30px;
+    max-width: 450px;
+}
+
+/* Buttons */
+.hero-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.btn-shop {
+    background: #e0e0e0;
+    color: #333;
+    padding: 12px 25px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-farmers {
+    background: var(--primary-orange);
+    color: white;
+    padding: 12px 25px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* Inset Image */
+.hero-image-inset {
+    flex: 1;
+}
+
+.hero-image-inset img {
+    width: 100%;
+    border-radius: 20px;
+    opacity: 0.8;
+}
+
+/* Features Section */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    max-width: 1100px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.feature-card {
+    background-color: var(--card-peach);
+    padding: 30px;
+    border-radius: 15px;
+}
+
+.feature-card h3 {
+    margin-top: 0;
+    color: #444;
+    font-size: 1.4rem;
+}
+
+.feature-card p {
+    color: #555;
+    line-height: 1.5;
+    margin-bottom: 0;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 850px) {
+    .hero-content { flex-direction: column; text-align: center; }
+    .features-grid { grid-template-columns: 1fr; }
+    .hero-text p { margin: 0 auto 30px auto; }
+    .hero-buttons { justify-content: center; }
 }

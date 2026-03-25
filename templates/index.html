@@ -1,38 +1,41 @@
 {% extends "base.html" %}
 {% block head %}GreenField Local Hub{% endblock %}
+
 {% block body %}
 <link rel="stylesheet" href="/static/css/index.css">
-    <main class="hero-container">
+
+<main class="hero-section">
+    <div class="glass-container">
         <div class="hero-content">
-            <div class="hero-text-block">
+            <div class="hero-text">
                 <h1>From the farm to<br>your home</h1>
                 <p>Fresh, seasonal produce from local farms — delivered to your door, every week. No middlemen. No waste. Just honest food.</p>
                 <div class="hero-buttons">
-                    <button class="btn-shop">
-                        <img src="cart-icon.svg" alt="" width="20"> Shop Now
-                    </button>
-                    <button class="btn-filled">Meet our farmers</button>
+                    <a href="#" class="btn-shop">
+                        <span class="icon">🛒</span> Shop Now
+                    </a>
+                    <a href="#" class="btn-farmers">Meet our farmers</a>
                 </div>
             </div>
-            <div class="hero-image-display">
+            <div class="hero-image-inset">
                 <img src="/static/images/gemma-c-stpjHJGqZyw-unsplash.jpg" alt="Local produce display">
             </div>
         </div>
-    </main>
+    </div>
+</main>
 
-    <section class="features-section">
-        <div class="feature-card">
-            <h3>Hyper Local</h3>
-            <p>Every item on GLH comes from farms within 30 miles. Know your farmer, know your food.</p>
-        </div>
-        <div class="feature-card">
-            <h3>Transparent Pricing</h3>
-            <p>Producers set their price. GLH takes 10%. You see exactly what goes to the farmer.</p>
-        </div>
-        <div class="feature-card">
-            <h3>Loyalty Rewards</h3>
-            <p>Earn points on every order. Redeem for credit and unlock exclusive seasonal offers.</p>
-        </div>
-    </section>
-
-    {% endblock %}
+<section class="features-grid">
+    <div class="feature-card">
+        <h3>Hyper Local</h3>
+        <p>Every item on GLH comes from farms within 30 miles. Know your farmer, know your food.</p>
+    </div>
+    <div class="feature-card">
+        <h3>Transparent Pricing</h3>
+        <p>Producers set their price. GLH takes 10%. You see exactly what goes to the farmer.</p>
+    </div>
+    <div class="feature-card">
+        <h3>Loyalty Rewards</h3>
+        <p>Earn points on every order. Redeem for credit and unlock exclusive seasonal offers.</p>
+    </div>
+</section>
+{% endblock %}

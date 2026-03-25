@@ -1,21 +1,241 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Search Icon in Input</title>
-<!-- Font Awesome CDN -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<style>
-    
-</style>
-</head>
-<body>
+{% extends "base.html" %}
+{% block head %}GreenField Local Hub - Contact Us{% endblock %}
 
-<div class="search-box">
-    <i class="fa fa-search"></i>
-    <input type="text" placeholder="Search...">
+{% block body %}
+<style>
+    :root {
+        --primary-orange: #f26532;
+        --form-bg: #ffffff;
+        --text-muted: #8d8d8d;
+    }
+
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #f9f9f9;
+        margin: 0;
+    }
+
+    .contact-header {
+        text-align: center;
+        margin: 50px 0;
+    }
+
+    .contact-header h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 10px;
+    }
+
+    .contact-header p {
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    /* Main Container Card */
+    .contact-card {
+        display: flex;
+        max-width: 1100px;
+        margin: 0 auto 100px auto;
+        background: var(--form-bg);
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        overflow: hidden;
+        padding: 10px;
+    }
+
+    /* Left Orange Info Section */
+    .info-panel {
+        background-color: #f69345;
+        color: white;
+        flex: 1;
+        padding: 40px;
+        border-radius: 8px;
+        position: relative;
+        min-width: 320px;
+    }
+
+    .info-panel h2 {
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+    }
+
+    .info-panel p.subtitle {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-bottom: 50px;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 35px;
+        font-size: 0.9rem;
+    }
+
+    /* Circles Graphic at Bottom Right of Orange Panel */
+    .circles-graphic {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 150px;
+        height: 150px;
+        background: rgba(0,0,0,0.1);
+        border-radius: 100% 0 0 0;
+    }
+
+    /* Right Form Section */
+    .form-panel {
+        flex: 2;
+        padding: 50px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px 30px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    .form-group label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: 5px;
+    }
+
+    .form-group input, .form-group textarea {
+        border: none;
+        border-bottom: 1px solid #ccc;
+        padding: 8px 0;
+        font-size: 0.9rem;
+        outline: none;
+        transition: border-color 0.3s;
+    }
+
+    .form-group input:focus {
+        border-bottom: 2px solid #000;
+    }
+
+    /* Subject Selection */
+    .subject-section {
+        margin-top: 40px;
+    }
+
+    .subject-section h4 {
+        font-size: 0.85rem;
+        margin-bottom: 15px;
+    }
+
+    .radio-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .radio-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+
+    /* Submit Button */
+    .btn-container {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 40px;
+    }
+
+    .send-btn {
+        background-color: var(--primary-orange);
+        color: white;
+        border: none;
+        padding: 12px 40px;
+        border-radius: 5px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 14px rgba(242, 101, 50, 0.3);
+    }
+
+    @media (max-width: 850px) {
+        .contact-card { flex-direction: column; }
+        .form-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="contact-header">
+    <h1>Contact Us</h1>
+    <p>Any question or remarks? Just write us a message!</p>
 </div>
 
-</body>
-</html
+<div class="contact-card">
+    <div class="info-panel">
+        <h2>Contact Information</h2>
+        <p class="subtitle">Say something to start a live chat!</p>
+
+        <div class="info-item">
+            <span>📞</span>
+            <span>+1012 3456 789</span>
+        </div>
+        <div class="info-item">
+            <span>✉️</span>
+            <span>demo@gmail.com</span>
+        </div>
+        <div class="info-item">
+            <span>📍</span>
+            <span>132 Dartmouth Street Boston,<br>Massachusetts 02156 United States</span>
+        </div>
+
+        <div class="circles-graphic"></div>
+    </div>
+
+    <div class="form-panel">
+        <form method="POST">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>First Name</label>
+                    <input type="text" name="first_name" placeholder="John">
+                </div>
+                <div class="form-group">
+                    <label>Last Name</label>
+                    <input type="text" name="last_name" placeholder="Doe">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" placeholder="example@gmail.com">
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" name="phone" placeholder="+1 234 567 890">
+                </div>
+            </div>
+
+            <div class="subject-section">
+                <h4>Select Subject?</h4>
+                <div class="radio-group">
+                    <label class="radio-item"><input type="radio" name="subject" value="general" checked> General Inquiry</label>
+                    <label class="radio-item"><input type="radio" name="subject" value="register-farm"> Register Farmer</label>
+                    <label class="radio-item"><input type="radio" name="subject" value="account-isues"> Acount Issues</label>
+                    <label class="radio-item"><input type="radio" name="subject" value="join"> Join us</label>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 40px;">
+                <label>Message</label>
+                <textarea name="message" rows="1" placeholder="Write your message.."></textarea>
+            </div>
+
+            <div class="btn-container">
+                <button type="submit" class="send-btn">Send Message</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
