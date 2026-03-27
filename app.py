@@ -5,7 +5,7 @@ import re
 import shutil
 import json
 from datetime import date, datetime
-from models import db
+from models import db, User
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
@@ -14,8 +14,9 @@ from flask_login import (
     LoginManager, login_user, login_required,
     logout_user, current_user,
 )
-from customer import customer_bp
+from customers import customer_bp
 from auth import auth_bp
+from admin import admin_bp
 
 
 # import your auth blueprint
@@ -24,9 +25,28 @@ from auth import auth_bp, login_manager
 app = Flask(__name__)
 get_config(app)
 
+def seed_admin_user():
+        """Create a default admin user if none exists."""
+        existing_admin = User.query.filter_by(role='admin').first()
+        if not existing_admin:
+            admin_user = User(
+                name='Admin',
+                email='admin@glh.co.uk',
+                password_hash=generate_password_hash('admin@glh123', method='scrypt'),
+                role='admin',
+                address='123 Admin St, City, Country',
+                #dob=date(1990, 1, 1),
+                phone='0000000000',
+                created_at=datetime.utcnow()
+            )
+            db.session.add(admin_user)
+            db.session.commit()
+
+
 # --- register blueprint ---
 app.register_blueprint(auth_bp)
 app.register_blueprint(customer_bp)
+app.register_blueprint(admin_bp)
 
 # --- setup login manager ---
 login_manager.init_app(app)
@@ -34,7 +54,7 @@ login_manager.login_view = "auth.login"
 
 with app.app_context():
     db.create_all()
-    
+    seed_admin_user()
 #--- nav links setup ---
 nav_links = [
     {"name": "Home", "url": "/"},

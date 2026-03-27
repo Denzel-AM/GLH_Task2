@@ -14,6 +14,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
     phone = db.Column(db.String(20), nullable=True)
+    #d.o.b = db.Column(db.DateTime,  nullable=False)
     address = db.Column(db.Text, nullable=False)
     role = db.Column(db.String(20), nullable=False, default="customer")
     loyalty_points = db.Column(db.Integer, default=0)

@@ -3,7 +3,11 @@
 
 {% block body %}
 <link rel="stylesheet" href="/static/css/dashboard.css">
-
+<style>
+    .navbar {
+        display : none;
+    }
+</style>
 <div class="dashboard-wrapper">
     <aside class="sidebar">
         <div class="sidebar-logo">
@@ -22,10 +26,10 @@
         </nav>
 
         <div class="sidebar-user">
-            <div class="user-avatar">DM</div>
+            <div class="user-avatar">{{initials}}</div>
             <div class="user-info">
-                <strong>Denzel Mushayawedu</strong>
-                <span>Member Since 2026</span>
+                <strong>{{user.name}}</strong>
+                <span>Member Since {{user.created_at}}</span>
             </div>
         </div>
     </aside>
@@ -33,15 +37,16 @@
     <main class="main-content">
         <header class="content-header">
             <div class="header-left">
-                <p class="current-date">Monday 16 March 2026</p>
-                <h2>Hi, Denzel</h2>
+                <p class="current-date">{{day}} {{date}} {{month}}, {{year}}</p>
+                <h2>Welcome Back {{first_name}}</h2>
                 <p class="subtitle">You've supported <strong>8 local farmers</strong> this month</p>
             </div>
             <div class="loyalty-badge">
                 <span class="star">★</span>
                 <div class="points">
-                    <strong>1250 Points</strong>
-                    <span>£12.50 credit available</span>
+                    <strong>{{user.loyalty_points}} Points</strong>
+                    <span> {{credit}} credit available</span>
+
                 </div>
             </div>
         </header>
@@ -49,17 +54,17 @@
         <section class="stats-grid">
             <div class="stat-card">
                 <span>Total Orders</span>
-                <h3>24</h3>
-                <p>+3 this month</p>
+                <h3>{{total_orders}}</h3>
+                <p>+0 this month</p>
             </div>
             <div class="stat-card">
                 <span>Total spent</span>
-                <h3>£318</h3>
+                <h3>0</h3>
                 <p>Since Joining</p>
             </div>
             <div class="stat-card">
                 <span>Farmers Supported</span>
-                <h3>8</h3>
+                <h3>0</h3>
                 <p>This month</p>
             </div>
         </section>
@@ -67,6 +72,8 @@
         <section class="order-tracker">
             <div class="tracker-header">
                 <div class="order-id">
+                    <h1>No current Orders</h1>
+                    <!--
                     <strong>Order #GLH-9928</strong>
                     <p>Arriving today between 2:00 PM – 4:00 PM</p>
                 </div>
@@ -79,13 +86,15 @@
                     <span class="step active">Harvested</span>
                     <span class="step current">In Transit</span>
                     <span class="step">Delivered</span>
-                </div>
+                </div>-->
             </div>
         </section>
 
         <section class="recent-orders">
             <div class="section-header">
                 <h3>Recent Orders</h3>
+                <h1>You do not have any orders yet</h1>
+                <!---
                 <a href="#" class="view-all">View all</a>
             </div>
             <table class="orders-table">
@@ -115,6 +124,7 @@
                     </tr>
                 </tbody>
             </table>
+        -->
         </section>
     </main>
 </div>
