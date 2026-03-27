@@ -126,7 +126,7 @@ class Loyalty(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     points = db.Column(db.Integer, default=0, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
+    level = db.column(db.String(50))
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, unique=True)
 
     def __repr__(self):
@@ -147,3 +147,5 @@ class StockMovement(db.Model):
 
     def __repr__(self):
         return f"<StockMovement {self.id}>"
+
+

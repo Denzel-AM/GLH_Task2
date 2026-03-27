@@ -24,6 +24,9 @@ body {
     color: var(--text-white);
 }
 
+a {
+    text-decoration: none;
+}
 .logo {
     line-height: 1;
 }

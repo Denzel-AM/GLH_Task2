@@ -11,7 +11,7 @@ from flask_login import (
 )
 from flask_login import UserMixin
 
-from models import db, User
+from models import db, User, Loyalty
 
 
 
@@ -196,7 +196,7 @@ def register():
         dob_str          = request.form.get("dob", "").strip()
         address          = request.form.get("address", "").strip()
         password         = request.form.get("password", "")
-        confirm_password = request.form.get("confirmpassword", "")
+        confirm_password = request.form.get("confirm_password", "")# fixed
 
         ctx = {"nav_links": NAV["register"]}   # shorthand for re-renders
 

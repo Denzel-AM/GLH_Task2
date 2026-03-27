@@ -14,7 +14,7 @@ from flask_login import (
     LoginManager, login_user, login_required,
     logout_user, current_user,
 )
-
+from customer import customer_bp
 from auth import auth_bp
 
 
@@ -26,7 +26,7 @@ get_config(app)
 
 # --- register blueprint ---
 app.register_blueprint(auth_bp)
-
+app.register_blueprint(customer_bp)
 
 # --- setup login manager ---
 login_manager.init_app(app)
