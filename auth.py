@@ -362,11 +362,79 @@ def update_account():
 
 
 
+@auth_bp.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    """
+    Step 1 of password reset flow.
+    Accepts an email address and — if it belongs to a registered user —
+    generates a signed time-limited token and logs a reset link (dev mode).
+    """
+    if current_user.is_authenticated:
+        return redirect(_dashboard_url_for(current_user))
+
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+
+        if not email:
+            flash("Please enter your email address.", "danger")
+            return render_template("auth/forgot_password.html", nav_links=NAV["login"])
+
+        user = User.query.filter_by(email=email).first()
+
+        # Always show the same message to prevent user enumeration attacks.
+        flash(
+            "If that email is registered, you will receive a reset link shortly.",
+            "success",
+        )
+
+        if user and user.is_active:
+            token = _generate_reset_token(user)
+            _send_reset_email(user, token)
+
+        return redirect(url_for("auth.login"))
+
+    return render_template("auth/forgot_password.html", nav_links=NAV["login"])
 
 
 
 
+@auth_bp.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token: str):
+    """
+    Step 2 of the password reset flow.
+    Validates the token, then lets the user choose a new password.
+    """
+    if current_user.is_authenticated:
+        return redirect(_dashboard_url_for(current_user))
 
+    user = _verify_reset_token(token)
+    if user is None:
+        flash("This reset link is invalid or has expired. Please request a new one.", "danger")
+        return redirect(url_for("auth.forgot_password"))
+
+    if request.method == "POST":
+        new_password     = request.form.get("new_password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        if new_password != confirm_password:
+            flash("Passwords do not match.", "danger")
+            return render_template("auth/reset_password.html", token=token, nav_links=NAV["login"])
+
+        if not is_valid_password(new_password):
+            flash(
+                "Password must be at least 8 characters and include an uppercase letter, "
+                "a lowercase letter, a number, and a special character.",
+                "danger",
+            )
+            return render_template("auth/reset_password.html", token=token, nav_links=NAV["login"])
+
+        user.set_password(new_password)
+        db.session.commit()
+
+        flash("Password reset successfully. Please sign in with your new password.", "success")
+        return redirect(url_for("auth.login"))
+
+    return render_template("auth/reset_password.html", token=token, nav_links=NAV["login"])
 
 
 
@@ -409,7 +477,7 @@ def delete_account():
     flash("Your account and all associated data have been permanently deleted.", "success")
     return redirect(url_for("auth.login"))
 
-'''# ─────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
 # PASSWORD RESET TOKEN HELPERS
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -457,5 +525,18 @@ def _verify_reset_token(token: str):
     except Exception:
         return None
 
+def _sign(payload: str) -> str:
+    """HMAC-SHA256 signature using the app's SECRET_KEY."""
+    key = current_app.secret_key
+    if isinstance(key, str):
+        key = key.encode()
+    return hmac.new(key, payload.encode(), hashlib.sha256).hexdigest()
 
-def _sign(payload: str) -> str:'''
+
+def _send_reset_email(user: User, token: str) -> None:
+    """
+    Sends a password reset link. In development, the link is printed to console.
+    Replace with your email provider (Flask-Mail, SendGrid, etc.) for production.
+    """
+    reset_url = url_for("auth.reset_password", token=token, _external=True)
+    print(f"[GLH DEV] Password reset link for {user.email}: {reset_url}")
