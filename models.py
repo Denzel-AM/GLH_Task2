@@ -59,11 +59,12 @@ class Product(db.Model):
     image_url = db.Column(db.String(255), nullable=True)
     availability_status = db.Column(db.String(50), default="In Stock")
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-
+    producer_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=False)
 
     order_items = db.relationship("OrderItem", backref="product", lazy=True)
     stock_movements = db.relationship("StockMovement", backref="product", lazy=True, cascade="all, delete-orphan")
+    users = db.relationship("User", backref="product", lazy=True)
 
     def update_availability(self):
         self.availability_status = "Out of Stock" if self.stock_quantity <= 0 else "In Stock"

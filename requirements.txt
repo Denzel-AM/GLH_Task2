@@ -15,3 +15,5 @@ gunicorn
 boto3
 pandas
 flask_login
+flask_migrate
+#

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block head %}Producer Dashboard — GreenField Local Hub{% endblock %}
+
+{% block body %}
+<link rel="stylesheet" href="/static/css/dashboard.css">
+<link rel="stylesheet" href="/static/css/producer.css">
+
+<div class="dashboard-wrapper">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h1>GL<span>H</span></h1>
+            <p>Producer Portal</p>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('producer.dashboard') }}" class="active"><i class="icon">📊</i> Dashboard</a>
+            <a href="#"><i class="icon">📦</i> Manage Stock</a>
+            <a href="#"><i class="icon">⚙️</i> Settings</a>
+            <a href="{{ url_for('auth.account_settings') }}"><i class="icon">🔒</i> Security</a>
+            <a href="{{ url_for('auth.logout') }}"><i class="icon">🚪</i> Logout</a>
+        </nav>
+        <div class="sidebar-user">
+            <div class="user-avatar">{{initials}}</div>
+            <div class="user-info">
+                <strong>{{ user.name }}</strong>
+                <span>Producer</span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="content-header">
+            <div class="header-left">
+                <p class="current-date">{{day}} {{date}} {{month}}, {{year}}</p>
+                <h2>Welcome back, {{ user.name.split()[0] }}</h2>
+                <p class="subtitle">Here's an overview of your products and sales.</p>
+            </div>
+        </header>
+
+        <!-- Stats -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <span>Your Products</span>
+                <h3>{{ products|length }}</h3>
+                <p>Listed on GLH</p>
+            </div>
+            <div class="stat-card">
+                <span>Total Revenue</span>
+                <h3>£{{ "%.0f"|format(total_revenue) }}</h3>
+                <p>All time</p>
+            </div>
+            <div class="stat-card">
+                <span>Low Stock Items</span>
+                <h3>{{ low_stock|length }}</h3>
+                <p>Need restocking</p>
+            </div>
+        </section>
+
+        <!-- Low Stock Alerts -->
+        {% if low_stock %}
+        <section class="alert-section">
+            <div class="section-header">
+                <h3>⚠ Low Stock Alerts</h3>
+                <a href="#" class="view-all">Update Stock</a>
+            </div>
+            <div class="alert-list">
+                {% for p in low_stock %}
+                <div class="alert-item {% if p.stock_quantity == 0 %}alert-oos{% else %}alert-low{% endif %}">
+                    <span class="alert-name">{{ p.product_name }}</span>
+                    <span class="alert-qty">{{ p.stock_quantity }} remaining</span>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Products Table -->
+        <section class="recent-orders">
+            <div class="section-header">
+                <h3>Your Products</h3>
+                <a href="#" class="view-all">Manage all</a>
+            </div>
+            {% if products %}
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in products %}
+                    <tr>
+                        <td><strong>{{ p.product_name }}</strong></td>
+                        <td>{{ p.category.category_name }}</td>
+                        <td>£{{ "%.2f"|format(p.price) }}</td>
+                        <td>{{ p.stock_quantity }}</td>
+                        <td>
+                            <span class="status-pill {% if p.stock_quantity > 0 %}status-confirmed{% else %}status-cancelled{% endif %}">
+                                {{ p.availability_status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="no-data">No products yet. <a href="#">Add your first product.</a></p>
+            {% endif %}
+        </section>
+
+        <!-- Recent Orders -->
+        {% if recent_orders %}
+        <section class="recent-orders">
+            <div class="section-header">
+                <h3>Recent Customer Orders</h3>
+            </div>
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in recent_orders %}
+                    <tr>
+                        <td>#GLH-{{ "%04d"|format(order.id) }}</td>
+                        <td>{{ order.order_date.strftime('%d %b %Y') }}</td>
+                        <td>{{ order.user.name }}</td>
+                        <td>£{{ "%.2f"|format(order.total_amount) }}</td>
+                        <td>
+                            <span class="status-pill status-{{ order.order_status|lower|replace(' ', '-') }}">
+                                {{ order.order_status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

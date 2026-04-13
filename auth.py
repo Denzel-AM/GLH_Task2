@@ -315,11 +315,99 @@ def account_settings():
         nav_links=nav_for(current_user),
     )
 
+@auth_bp.route("/account/update", methods=["POST"])
+@login_required
+def update_account():
+    """Update name, email, phone, and address for the current user."""
+    user    = current_user
+    name    = request.form.get("name", "").strip()
+    email   = request.form.get("email", "").strip().lower()
+    phone   = request.form.get("phone", "").strip()
+    address = request.form.get("address", "").strip()
+
+    # ── Validation ────────────────────────────────────────────────────────────
+    if not name or len(name) < 2:
+        flash("Name must be at least 2 characters.", "danger")
+        return redirect(url_for("auth.account_settings"))
+
+    if not re.match(r"^[A-Za-z][A-Za-z '-]{1,}$", name):
+        flash("Name must contain only letters, spaces, hyphens, or apostrophes.", "danger")
+        return redirect(url_for("auth.account_settings"))
+
+    if not email:
+        flash("Email address is required.", "danger")
+        return redirect(url_for("auth.account_settings"))
+
+    # Check email uniqueness — exclude the current user's own record
+    taken = User.query.filter(User.email == email, User.id != user.id).first()
+    if taken:
+        flash("That email address is already in use.", "danger")
+        return redirect(url_for("auth.account_settings"))
+
+    if address and len(address) < 5:
+        flash("Please enter a valid address (at least 5 characters).", "danger")
+        return redirect(url_for("auth.account_settings"))
+
+    # ── Persist ───────────────────────────────────────────────────────────────
+    user.name    = name
+    user.email   = email
+    user.phone   = phone or None
+    user.address = address or user.address
+
+    db.session.commit()
+    flash("Account details updated successfully.", "success")
+    return redirect(url_for("auth.account_settings"))
 
 
 
 
 
+
+
+
+
+
+
+
+
+#__________________________________________________________________________
+#delete account
+#______________________________________________________________________
+
+
+
+
+@auth_bp.route("/account/delete", methods=["POST"])
+@login_required
+def delete_account():
+    """
+    Permanently delete the current user's account and all related data.
+    Requires password confirmation and the user typing 'DELETE'.
+    Admin accounts cannot be self-deleted for safety.
+    """
+    user                = current_user
+    current_password    = request.form.get("current_password", "")
+    confirmation_text   = request.form.get("confirm_text", "").strip().upper()
+
+    # Prevent admins from accidentally deleting themselves via this route
+    if user.role == "admin":
+        flash("Admin accounts cannot be deleted through this interface. Contact the system owner.", "danger")
+        return redirect(url_for("auth.account_settings"))
+
+    if not user.check_password(current_password):
+        flash("Current password is incorrect.", "danger")
+        return redirect(url_for("auth.account_settings"))
+
+    if confirmation_text != "DELETE":
+        flash("Please type DELETE (in capitals) to confirm account deletion.", "danger")
+        return redirect(url_for("auth.account_settings"))
+
+    logout_user()
+    db.session.delete(user)   # cascade in models.py removes orders, loyalty, enquiries
+    db.session.commit()
+
+    flash("Your account and all associated data have been permanently deleted.", "success")
+    return redirect(url_for("auth.login"))
 
 '''# ─────────────────────────────────────────────────────────────────────────────
 # PASSWORD RESET TOKEN HELPERS

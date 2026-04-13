@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block head %}Shop — GreenField Local Hub{% endblock %}
+
+{% block body %}
+<link rel="stylesheet" href="/static/css/shop.css">
+
+<div class="shop-page">
+
+    <!-- Shop Header -->
+    <div class="shop-header">
+        <div class="shop-header-text">
+            <h1>Fresh from Local Farms</h1>
+            <p>All products are sourced within 30 miles. Prices set by producers — you see exactly what they earn.</p>
+        </div>
+        <div class="shop-header-actions">
+            <a href="{{ url_for('shop.view_cart') }}" class="cart-btn">
+                🛒 Cart
+                {% if cart_count > 0 %}
+                    <span class="cart-badge">{{ cart_count }}</span>
+                {% endif %}
+            </a>
+        </div>
+    </div>
+
+    <div class="shop-layout">
+
+        <!-- Sidebar Filters -->
+        <aside class="shop-sidebar">
+            <form method="GET" action="{{ url_for('shop.shop') }}">
+                <div class="filter-section">
+                    <h3>Search</h3>
+                    <div class="search-input-wrap">
+                        <input type="text" name="search" value="{{ search }}" placeholder="Search products..." class="filter-search">
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Category</h3>
+                    <ul class="category-list">
+                        <li>
+                            <a href="{{ url_for('shop.shop', search=search) }}"
+                               class="cat-link {% if not selected_category %}active{% endif %}">
+                               All Products
+                            </a>
+                        </li>
+                        {% for cat in categories %}
+                        <li>
+                            <a href="{{ url_for('shop.shop', category=cat.id, search=search) }}"
+                               class="cat-link {% if selected_category == cat.id %}active{% endif %}">
+                               {{ cat.category_name }}
+                               <span class="cat-count">{{ cat.products|length }}</span>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <button type="submit" class="btn-filter">Apply Filters</button>
+                <a href="{{ url_for('shop.shop') }}" class="clear-filters">Clear all</a>
+            </form>
+        </aside>
+
+        <!-- Product Grid -->
+        <main class="shop-main">
+            <div class="results-bar">
+                <span>{{ products|length }} product{{ 's' if products|length != 1 else '' }} found</span>
+                {% if selected_category %}
+                    <span class="active-filter">
+                        Category: {{ categories|selectattr('id', 'eq', selected_category)|map(attribute='category_name')|first }}
+                        <a href="{{ url_for('shop.shop', search=search) }}">✕</a>
+                    </span>
+                {% endif %}
+                {% if search %}
+                    <span class="active-filter">
+                        Search: "{{ search }}"
+                        <a href="{{ url_for('shop.shop', category=selected_category) }}">✕</a>
+                    </span>
+                {% endif %}
+            </div>
+
+            {% if products %}
+            <div class="product-grid">
+                {% for product in products %}
+                <div class="product-card {% if product.stock_quantity == 0 %}out-of-stock{% endif %}">
+                    <div class="product-img-wrap">
+                        {% if product.image_url %}
+                        <img src="{{ product.image_url }}" alt="{{ product.product_name }}" loading="lazy">
+                        {% else %}
+                        <div class="img-placeholder">🌿</div>
+                        {% endif %}
+                        <span class="stock-pill {{ 'in-stock' if product.stock_quantity > 0 else 'oos' }}">
+                            {{ product.availability_status }}
+                        </span>
+                    </div>
+
+                    <div class="product-body">
+                        <span class="product-category">{{ product.category.category_name }}</span>
+                        <h3 class="product-name">{{ product.product_name }}</h3>
+                        {% if product.description %}
+                        <p class="product-desc">{{ product.description }}</p>
+                        {% endif %}
+
+                        {% if product.producer %}
+                        <p class="product-producer">
+                            <span>🌾</span> {{ product.producer.name }}
+                        </p>
+                        {% endif %}
+
+                        <div class="product-footer">
+                            <span class="product-price">£{{ "%.2f"|format(product.price) }}</span>
+
+                            {% if product.stock_quantity > 0 %}
+                            <form method="POST" action="{{ url_for('shop.add_to_cart') }}" class="add-form">
+                                <input type="hidden" name="product_id" value="{{ product.id }}">
+                                <input type="hidden" name="next" value="{{ request.url }}">
+                                <div class="qty-add-row">
+                                    <input type="number" name="quantity" value="1" min="1" max="{{ product.stock_quantity }}"
+                                           class="qty-input" aria-label="Quantity">
+                                    <button type="submit" class="btn-add">Add to Cart</button>
+                                </div>
+                            </form>
+                            {% else %}
+                            <span class="oos-text">Out of Stock</span>
+                            {% endif %}
+                        </div>
+
+                        {% if product.stock_quantity > 0 and product.stock_quantity <= 10 %}
+                        <p class="low-stock-msg">⚠ Only {{ product.stock_quantity }} left</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% else %}
+            <div class="no-results">
+                <div class="no-results-icon">🌾</div>
+                <h3>No products found</h3>
+                <p>Try a different search term or category filter.</p>
+                <a href="{{ url_for('shop.shop') }}" class="btn-filled">View all products</a>
+            </div>
+            {% endif %}
+        </main>
+
+    </div>
+</div>
+
+{% endblock %}

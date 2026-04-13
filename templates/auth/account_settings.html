@@ -13,19 +13,19 @@
         <nav class="sidebar-nav">
             {% if user.role == 'customer' %}
             <a href="{{ url_for('customer.dashboard') }}"><i class="icon">👤</i> Dashboard</a>
-            <a href="{{ url_for('customer.orders') }}"><i class="icon">🕒</i> Order History</a>
+            <a href="#"><i class="icon">🕒</i> Order History</a>
             <a href="{{ url_for('auth.account_settings') }}" class="active"><i class="icon">⚙️</i> Security Settings</a>
-            <a href="{{ url_for('shop.view_cart') }}"><i class="icon">🛒</i> Cart</a>
-            <a href="{{ url_for('shop.shop') }}"><i class="icon">🏪</i> Go to Shop</a>
+            <a href="#"><i class="icon">🛒</i> Cart</a>
+            <a href="#"><i class="icon">🏪</i> Go to Shop</a>
             {% elif user.role == 'producer' %}
             <a href="{{ url_for('producer.dashboard') }}"><i class="icon">📊</i> Dashboard</a>
-            <a href="{{ url_for('producer.manage_stock') }}"><i class="icon">📦</i> Manage Stock</a>
+            <a href="#"><i class="icon">📦</i> Manage Stock</a>
             <a href="{{ url_for('auth.account_settings') }}" class="active"><i class="icon">⚙️</i> Security Settings</a>
             {% endif %}
             <a href="{{ url_for('auth.logout') }}"><i class="icon">🚪</i> Logout</a>
         </nav>
         <div class="sidebar-user">
-            <div class="user-avatar">{{ user.get_initials() }}</div>
+            <div class="user-avatar">{{initials}}</div>
             <div class="user-info">
                 <strong>{{ user.name }}</strong>
                 <span>{{ user.role|capitalize }}</span>
@@ -41,6 +41,75 @@
             </div>
         </header>
 
+        <div class="settings-card" id="section-profile">
+        <div class="settings-card-header">
+          <h2 class="settings-card-title">Personal Information</h2>
+          <p class="settings-card-sub">Update your name, contact details, and delivery address.</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.update_account') }}" novalidate id="settings-form" class="settings-form">
+
+          <div class="field-row-2">
+            <div class="settings-field">
+              <label for="name">Full name</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                autocomplete="name"
+                value="{{ current_user.name }}"
+                required
+                aria-required="true"
+                minlength="2"
+              >
+            </div>
+            <div class="settings-field">
+              <label for="email">Email address</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                autocomplete="email"
+                value="{{ current_user.email }}"
+                required
+                aria-required="true"
+              >
+            </div>
+          </div>
+
+          <div class="field-row-2">
+            <div class="settings-field">
+              <label for="phone">
+                Phone number
+              </label>
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                autocomplete="tel"
+                placeholder="+44 7700 900 123"
+                value="{{ current_user.phone or '' }}"
+              >
+            </div>
+          </div>
+
+          <div class="settings-field">
+            <label for="settings-field">Delivery address</label>
+            <textarea
+              id="address"
+              name="address"
+              autocomplete="street-address"
+              rows="2"
+              minlength="5"
+            >{{ current_user.address or '' }}</textarea>
+          </div>
+
+          <div class="settings-form-footer">
+            <button type="submit" class="btn-filled settings-submit">Save Changes</button>
+          </div>
+
+        </form>
+        </div>
         <div class="settings-card">
             <h3>Change Password</h3>
             <form method="POST" action="{{ url_for('auth.account_settings') }}" id="settings-form" class="settings-form">
@@ -93,8 +162,42 @@
                     <span>{{ user.last_login.strftime('%d %b %Y, %H:%M') }}</span>
                 </div>
                 {% endif %}
+                <div class="info-item">
+                    <span class="info-label"> Address</span>
+                    <span>{{ user.address }}</span>
+
+                </div>
             </div>
         </div>
+
+        <div class="settings-card">
+            <div class="settings-field">
+              <label for="confirm_text">
+                Type <strong>DELETE</strong> to confirm
+              </label>
+              <form action="auth.delete_account" method="Post">
+                <div class="settings-field">
+                    <input
+                        type="text"
+                        id="confirm_text"
+                        name="confirm_text"
+                        placeholder="DELETE"
+                        required
+                        aria-required="true"
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="settings-field">
+                <button type="button" class="btn btn-ghost" id="cancel-delete">Cancel</button>
+                <button type="submit" class="btn btn-danger" id="confirm-delete-btn" disabled>
+                    Permanently Delete Account
+                </button>
+            </div>
+            </form>
+              
+        </div>
+        
     </main>
 </div>
 

@@ -17,6 +17,12 @@ from flask_login import (
 from customers import customer_bp
 from auth import auth_bp
 from admin import admin_bp
+from producers import producer_bp
+from flask_migrate import Migrate
+
+
+
+
 
 
 # import your auth blueprint
@@ -47,6 +53,7 @@ def seed_admin_user():
 app.register_blueprint(auth_bp)
 app.register_blueprint(customer_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(producer_bp)
 
 # --- setup login manager ---
 login_manager.init_app(app)
@@ -55,6 +62,7 @@ login_manager.login_view = "auth.login"
 with app.app_context():
     db.create_all()
     seed_admin_user()
+    migrate = Migrate(app, db)
 #--- nav links setup ---
 nav_links = [
     {"name": "Home", "url": "/"},
