@@ -278,3 +278,96 @@ def logout():
     logout_user()
     flash("You have been logged out successfully.", "success")
     return redirect(url_for("auth.login"))
+
+
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ACCOUNT SETTINGS (auth-owned route for password change)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@auth_bp.route("/account-settings", methods=["GET", "POST"])
+@login_required
+def account_settings():
+    if request.method == "POST":
+        current_password = request.form.get("current_password", "")
+        new_password     = request.form.get("new_password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        if not current_user.check_password(current_password):
+            flash("Current password is incorrect.", "danger")
+        elif new_password != confirm_password:
+            flash("New passwords do not match.", "danger")
+        elif not is_valid_password(new_password):
+            flash(
+                "New password must be at least 8 characters with uppercase, lowercase, "
+                "a number, and a special character.",
+                "danger",
+            )
+        else:
+            current_user.set_password(new_password)
+            db.session.commit()
+            flash("Password updated successfully.", "success")
+
+    return render_template(
+        "auth/account_settings.html",
+        user=current_user,
+        nav_links=nav_for(current_user),
+    )
+
+
+
+
+
+
+
+'''# ─────────────────────────────────────────────────────────────────────────────
+# PASSWORD RESET TOKEN HELPERS
+# ─────────────────────────────────────────────────────────────────────────────
+
+import hashlib
+import hmac
+import time
+from flask import current_app
+
+# Re-export Loyalty for use in register route above
+from models import Loyalty
+
+_RESET_TOKEN_MAX_AGE_SECONDS = 3600   # 1 hour
+
+
+def _generate_reset_token(user: User) -> str:
+    """
+    Build a signed token: base64( user_id | timestamp | HMAC-SHA256 ).
+    No extra dependency required — uses only Python stdlib.
+    """
+    import base64
+    ts      = int(time.time())
+    payload = f"{user.id}:{ts}"
+    sig     = _sign(payload)
+    raw     = f"{payload}:{sig}"
+    return base64.urlsafe_b64encode(raw.encode()).decode()
+
+
+def _verify_reset_token(token: str):
+    """Return the User if the token is valid and unexpired, else None."""
+    import base64
+    try:
+        raw = base64.urlsafe_b64decode(token.encode()).decode()
+        user_id_str, ts_str, sig = raw.rsplit(":", 2)
+        payload = f"{user_id_str}:{ts_str}"
+
+        expected = _sign(payload)
+        if not hmac.compare_digest(expected, sig):
+            return None
+
+        if time.time() - int(ts_str) > _RESET_TOKEN_MAX_AGE_SECONDS:
+            return None
+
+        return db.session.get(User, int(user_id_str))
+
+    except Exception:
+        return None
+
+
+def _sign(payload: str) -> str:'''

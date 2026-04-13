@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block head %}Account Settings — GreenField Local Hub{% endblock %}
+
+{% block body %}
+<link rel="stylesheet" href="/static/css/dashboard.css">
+
+<div class="dashboard-wrapper">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h1>GL<span>H</span></h1>
+            <p>Greenfield Local Hub</p>
+        </div>
+        <nav class="sidebar-nav">
+            {% if user.role == 'customer' %}
+            <a href="{{ url_for('customer.dashboard') }}"><i class="icon">👤</i> Dashboard</a>
+            <a href="{{ url_for('customer.orders') }}"><i class="icon">🕒</i> Order History</a>
+            <a href="{{ url_for('auth.account_settings') }}" class="active"><i class="icon">⚙️</i> Security Settings</a>
+            <a href="{{ url_for('shop.view_cart') }}"><i class="icon">🛒</i> Cart</a>
+            <a href="{{ url_for('shop.shop') }}"><i class="icon">🏪</i> Go to Shop</a>
+            {% elif user.role == 'producer' %}
+            <a href="{{ url_for('producer.dashboard') }}"><i class="icon">📊</i> Dashboard</a>
+            <a href="{{ url_for('producer.manage_stock') }}"><i class="icon">📦</i> Manage Stock</a>
+            <a href="{{ url_for('auth.account_settings') }}" class="active"><i class="icon">⚙️</i> Security Settings</a>
+            {% endif %}
+            <a href="{{ url_for('auth.logout') }}"><i class="icon">🚪</i> Logout</a>
+        </nav>
+        <div class="sidebar-user">
+            <div class="user-avatar">{{ user.get_initials() }}</div>
+            <div class="user-info">
+                <strong>{{ user.name }}</strong>
+                <span>{{ user.role|capitalize }}</span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="content-header">
+            <div class="header-left">
+                <h2>Security Settings</h2>
+                <p class="subtitle">Update your password to keep your account secure.</p>
+            </div>
+        </header>
+
+        <div class="settings-card">
+            <h3>Change Password</h3>
+            <form method="POST" action="{{ url_for('auth.account_settings') }}" id="settings-form" class="settings-form">
+                <div class="settings-field">
+                    <label for="current_password">Current Password</label>
+                    <input type="password" id="current_password" name="current_password"
+                           placeholder="Enter your current password" required>
+                </div>
+                <div class="settings-field">
+                    <label for="new_password">New Password</label>
+                    <input type="password" id="new_password" name="new_password"
+                           placeholder="At least 8 chars, upper, lower, digit, special" required>
+                    <div id="strength-bar-wrap" class="strength-bar-wrap">
+                        <div id="strength-bar"></div>
+                        <span id="strength-label" class="strength-label"></span>
+                    </div>
+                </div>
+                <div class="settings-field">
+                    <label for="confirm_password">Confirm New Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password"
+                           placeholder="Re-enter new password" required>
+                    <p id="match-msg" class="match-msg"></p>
+                </div>
+                <button type="submit" class="btn-filled settings-submit">Update Password</button>
+            </form>
+        </div>
+
+        <div class="settings-card settings-card--mt">
+            <h3>Account Information</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Name</span>
+                    <span>{{ user.name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Email</span>
+                    <span>{{ user.email }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Role</span>
+                    <span>{{ user.role|capitalize }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Member Since</span>
+                    <span>{{ user.created_at.strftime('%B %Y') }}</span>
+                </div>
+                {% if user.last_login %}
+                <div class="info-item">
+                    <span class="info-label">Last Login</span>
+                    <span>{{ user.last_login.strftime('%d %b %Y, %H:%M') }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="/static/js/register.js"></script>
+{% endblock %}

@@ -133,3 +133,49 @@
     border-radius: 15px;
     cursor: pointer;
 }
+
+/* Settings page */
+.settings-card {
+    background: #fff8f2;
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 20px;
+}
+.settings-card--mt { margin-top: 30px; }
+.settings-form { display: flex; flex-direction: column; gap: 20px; max-width: 480px; }
+.settings-field { display: flex; flex-direction: column; gap: 6px; }
+.settings-field label { font-size: 0.85rem; font-weight: 600; color: #555; }
+.settings-field input {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+}
+.settings-field input:focus { border-color: var(--orange-accent); outline: none; box-shadow: 0 0 0 3px rgba(242,101,50,0.15); }
+.settings-submit { align-self: flex-start; padding: 12px 30px; }
+.strength-bar-wrap { margin-top: 8px; }
+.strength-label { font-size: 0.8rem; color: #888; }
+.match-msg { font-size: 0.8rem; margin-top: 5px; }
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+.info-item { display: flex; flex-direction: column; gap: 4px; }
+.info-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Content header */
+.content-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; }
+.header-left h2 { margin: 0 0 5px 0; font-size: 1.8rem; }
+.subtitle { color: #777; margin: 0; }
+.current-date { font-size: 0.85rem; color: #999; margin: 0 0 5px 0; }
+
+/* Section header */
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.section-header h3 { margin: 0; }
+.view-all { color: var(--orange-accent); text-decoration: none; font-size: 0.9rem; }
+
+/* Tracker */
+.tracker-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.order-id strong { font-size: 1rem; }
+.order-id p { margin: 3px 0 0; color: #666; font-size: 0.85rem; }
+.progress-container { margin-top: 10px; }
+.step { color: #bbb; font-size: 0.8rem; }
+.step.active { color: #004d40; font-weight: 600; }
+.step.current { color: var(--orange-accent); font-weight: 700; }

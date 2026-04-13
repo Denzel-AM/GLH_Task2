@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block head %}Manage Accounts — GreenField Local Hub{% endblock %}
+
+{% block body %}
+<link rel="stylesheet" href="/static/css/dashboard.css">
+<link rel="stylesheet" href="/static/css/producer.css">
+
+<div class="dashboard-wrapper">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h1>GL<span>H</span></h1>
+            <p>Admin Panel</p>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('admin.dashboard') }}" class="active"><i class="icon">📊</i> Dashboard</a>
+            <a href="{{ url_for('admin.manage_accounts') }}"><i class="icon">👥</i> Manage Accounts</a>
+            <a href="#"><i class="icon">🌿</i> Manage Products</a>
+            <a href="#}"><i class="icon">📋</i> All Orders</a>
+            <a href='#'><i class="icon">⚙️</i> Account Settings</a>
+            <a href="{{ url_for('auth.logout') }}"><i class="icon">🚪</i> Logout</a>
+        </nav>
+        <div class="sidebar-user">
+            <div class="user-avatar">{{initials}}</div>
+            <div class="user-info">
+                <strong>{{ user.name }}</strong>
+                <span>Administrator</span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="content-header">
+            <div class="header-left">
+                <h2>Manage Accounts</h2>
+                <p class="subtitle">View, activate/deactivate, manage user roles, or create producer accounts.</p>
+            </div>
+        </header>
+
+        <!-- Create Producer Form -->
+        <div class="settings-card settings-card--mb">
+            <h3>Create Producer Account</h3>
+            <form method="POST" action="{{ url_for('admin.create_producer') }}" class="settings-form">
+                <div class="form-row-2">
+                    <div class="settings-field">
+                        <label for="new-name">Full Name / Farm Name <span class="required">*</span></label>
+                        <input type="text" id="new-name" name="name" placeholder="e.g. Tom Hargreaves" required>
+                    </div>
+                    <div class="settings-field">
+                        <label for="new-email">Email Address <span class="required">*</span></label>
+                        <input type="email" id="new-email" name="email" placeholder="producer@farm.co.uk" required>
+                    </div>
+                </div>
+                <div class="form-row-2">
+                    <div class="settings-field">
+                        <label for="new-phone">Phone Number</label>
+                        <input type="tel" id="new-phone" name="phone" placeholder="+44 ...">
+                    </div>
+                    <div class="settings-field">
+                        <label for="new-address">Farm / Business Address <span class="required">*</span></label>
+                        <input type="text" id="new-address" name="address" placeholder="Farm Lane, County" required>
+                    </div>
+                </div>
+                <div class="settings-field settings-field--narrow">
+                    <label for="new-password">Temporary Password <span class="required">*</span></label>
+                    <input type="password" id="new-password" name="password"
+                           placeholder="Min 8 chars, upper, lower, digit, special" required>
+                    <p class="pass-hint">Must include uppercase, lowercase, a number, and a special character.</p>
+                </div>
+                <button type="submit" class="btn-filled btn-form-submit">Create Producer</button>
+            </form>
+        </div>
+
+        <!-- Role Filter -->
+        <div class="filter-bar">
+            <a href="{{ url_for('admin.manage_accounts') }}"
+               class="filter-tab {% if not role_filter %}active{% endif %}">All</a>
+            <a href="{{ url_for('admin.manage_accounts', role='customer') }}"
+               class="filter-tab {% if role_filter == 'customer' %}active{% endif %}">Customers</a>
+            <a href="{{ url_for('admin.manage_accounts', role='producer') }}"
+               class="filter-tab {% if role_filter == 'producer' %}active{% endif %}">Producers</a>
+            <a href="{{ url_for('admin.manage_accounts', role='admin') }}"
+               class="filter-tab {% if role_filter == 'admin' %}active{% endif %}">Admins</a>
+        </div>
+
+        <section class="recent-orders">
+            <p class="result-count">{{ users|length }} account{{ 's' if users|length != 1 else '' }} found</p>
+            {% if users %}
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr class="{% if not u.is_active %}row-inactive{% endif %}">
+                        <td>
+                            <strong>{{ u.name }}</strong>
+                            {% if u.id == user.id %}<span class="you-badge">you</span>{% endif %}
+                        </td>
+                        <td>{{ u.email }}</td>
+                        <td>
+                            {% if u.id != user.id %}
+                            <form method="POST" action="{{ url_for('admin.change_role', user_id=u.id) }}" class="inline-form">
+                                <select name="role" class="role-select" onchange="this.form.submit()" aria-label="Role for {{ u.name }}">
+                                    <option value="customer" {% if u.role == 'customer' %}selected{% endif %}>Customer</option>
+                                    <option value="producer" {% if u.role == 'producer' %}selected{% endif %}>Producer</option>
+                                    <option value="admin"    {% if u.role == 'admin'    %}selected{% endif %}>Admin</option>
+                                </select>
+                            </form>
+                            {% else %}
+                            <span>{{ u.role|capitalize }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="status-pill {% if u.is_active %}status-confirmed{% else %}status-cancelled{% endif %}">
+                                {{ 'Active' if u.is_active else 'Inactive' }}
+                            </span>
+                        </td>
+                        <td>{{ u.created_at.strftime('%d %b %Y') }}</td>
+                        <td>
+                            {% if u.id != user.id %}
+                            <form method="POST" action="{{ url_for('admin.toggle_active', user_id=u.id) }}" class="inline-form">
+                                <button type="submit" class="{% if u.is_active %}btn-sm-danger{% else %}btn-sm-filled{% endif %}">
+                                    {{ 'Deactivate' if u.is_active else 'Activate' }}
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="no-data">No accounts found for this filter.</p>
+            {% endif %}
+        </section>
+    </main>
+</div>
+{% endblock %}

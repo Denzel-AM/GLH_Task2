@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block head %}GreenField Local Hub{% endblock %}</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo">
+            <span class="hub">GreenField</span><br>
+            <span class="local">Local Hub</span>
+        </div>
+
+        <div class="menu-toggle" id="mobile-menu">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </div>
+
+        <nav class="nav-links">
+            {% if nav_links %}
+                <ul>
+                    {% for link in nav_links %}
+                        <li><a href="{{ link['url'] }}">{{ link['name'] }}</a></li>
+                    {% endfor %}
+                    <li class="mobile-only"><a href="/register" class="btn-filled">Sign Up</a></li>
+                    <li class="mobile-only"><a href="/login" class="btn-outline">Login</a></li>
+                </ul>
+            {% endif %}
+        </nav>
+
+        <div class="header-actions desktop-only">
+            <form action="/shop" method="GET" class="search-box" role="search">
+                <input type="text" name="search" placeholder="Search products..." aria-label="Search products">
+            </form>
+            {% if current_user.is_authenticated %}
+            <a href="/cart" class="btn-outline">🛒 Cart</a>
+            {% else %}
+            <a href="/register" class="btn-filled">Sign Up</a>
+            <a href="/login" class="btn-outline">Login</a>
+            {% endif %}
+        </div>
+    </header>
+    <main>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block body %}
+    {% endblock %}
+  </main>
+
+    
+
+    
+
+    <footer class="main-footer">
+        <div class="footer-primary-content">
+            <div class="logo-text">GH</div>
+            <div class="footer-links-column">
+                <a href="/about">About Us</a>
+                <a href="/shop">Our Shop</a>
+                <a href="/contact-us">Customer Care</a>
+            </div>
+            <div class="footer-contact-column">
+                <h4>Reach us</h4>
+                <p><span class="icon">📞</span> +1012 3456 789</p>
+                <p><span class="icon">✉️</span> enquiries@glh.co.uk</p>
+                <p><span class="icon">📍</span> 132 Dartmouth Street, Bletchley,<br>United Kingdom</p>
+            </div>
+        </div>
+        <div class="footer-legal">
+            <nav class="legal-nav">
+                <a href="/terms">Terms of Use</a> |
+                <a href="/privacy">Privacy Policy</a> |
+                <a href="/contact-us">Contact</a>
+            </nav>
+            <p class="copyright">&copy; GLH 2026. All right reserved</p>
+        </div>
+    </footer>
+
+<script src="/static/js/main.js"></script>
+</body>
+</html>

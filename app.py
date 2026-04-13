@@ -111,14 +111,7 @@ def register():
 def shop():
     return render_template('shop.html', nav_links=shop_links)
 
-@app.route('/dashboard')
-
-def dashboard():
-    return render_template(
-        "dashboard.html",
-        nav_links=dashboard_nav_links,
-        user = user
-    )           
+         
 
 @app.route('/failure')
 

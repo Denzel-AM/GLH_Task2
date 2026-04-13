@@ -1,0 +1,96 @@
+
+{% extends "base.html" %}
+{% block head %}All Orders — GreenField Local Hub{% endblock %}
+
+{% block body %}
+<link rel="stylesheet" href="/static/css/dashboard.css">
+<link rel="stylesheet" href="/static/css/producer.css">
+
+<div class="dashboard-wrapper">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h1>GL<span>H</span></h1>
+            <p>Admin Panel</p>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('admin.dashboard') }}"><i class="icon">📊</i> Dashboard</a>
+            <a href="{{ url_for('admin.manage_accounts') }}"><i class="icon">👥</i> Manage Accounts</a>
+            <a href="{{ url_for('admin.manage_products') }}"><i class="icon">🌿</i> Manage Products</a>
+            <a href="{{ url_for('admin.orders') }}" class="active"><i class="icon">📋</i> All Orders</a>
+            <a href="{{ url_for('auth.account_settings') }}"><i class="icon">⚙️</i> Account Settings</a>
+            <a href="{{ url_for('auth.logout') }}"><i class="icon">🚪</i> Logout</a>
+        </nav>
+        <div class="sidebar-user">
+            <div class="user-avatar">{{ user.get_initials() }}</div>
+            <div class="user-info">
+                <strong>{{ user.name }}</strong>
+                <span>Administrator</span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="content-header">
+            <div class="header-left">
+                <h2>All Orders</h2>
+                <p class="subtitle">View and update order statuses across the platform.</p>
+            </div>
+        </header>
+
+        <!-- Status Filter -->
+        <div class="filter-bar">
+            <a href="{{ url_for('admin.orders') }}"
+               class="filter-tab {% if not status_filter %}active{% endif %}">All</a>
+            {% for s in ['Confirmed', 'Processing', 'Out for Delivery', 'Delivered', 'Cancelled'] %}
+            <a href="{{ url_for('admin.orders', status=s) }}"
+               class="filter-tab {% if status_filter == s %}active{% endif %}">{{ s }}</a>
+            {% endfor %}
+        </div>
+
+        <section class="recent-orders">
+            {% if orders %}
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Total</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Update</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td><strong>#GLH-{{ "%04d"|format(order.id) }}</strong></td>
+                        <td>{{ order.order_date.strftime('%d %b %Y') }}</td>
+                        <td>{{ order.user.name }}</td>
+                        <td>£{{ "%.2f"|format(order.total_amount) }}</td>
+                        <td>{{ order.delivery_type|capitalize }}</td>
+                        <td>
+                            <span class="status-pill status-{{ order.order_status|lower|replace(' ', '-') }}">
+                                {{ order.order_status }}
+                            </span>
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin.update_order_status', order_id=order.id) }}" class="inline-form">
+                                <select name="status" class="role-select" onchange="this.form.submit()" aria-label="Update status for order {{ order.id }}">
+                                    {% for s in ['Confirmed', 'Processing', 'Out for Delivery', 'Delivered', 'Cancelled'] %}
+                                    <option value="{{ s }}" {% if order.order_status == s %}selected{% endif %}>{{ s }}</option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="no-data">No orders found.</p>
+            {% endif %}
+        </section>
+    </main>
+</div>
+{% endblock %}
