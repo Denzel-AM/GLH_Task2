@@ -14,6 +14,8 @@ from models import (
 )
 from auth import nav_for
 from auth import is_valid_password
+from io import BytesIO
+import imghdr
 
 
 
@@ -40,8 +42,11 @@ def admin_required(fn):
 
 @admin_bp.route("/dashboard")
 @login_required
-@admin_required
+
 def dashboard():
+    if current_user.role != "admin":
+        flash("You do not have access to this page")
+        return redirect(url_for('auth.login'))
     total_users     = User.query.count()
     total_orders    = Order.query.count()
     total_products  = Product.query.count()
@@ -119,7 +124,8 @@ def dashboard():
 # ─────────────────────────────────────────────────────────────────────────────
 
 @admin_bp.route("/manage-accounts")
-@admin_required
+@login_required
+
 def manage_accounts():
     role_filter = request.args.get("role", "")
     query = User.query
@@ -141,9 +147,13 @@ def manage_accounts():
 #__________________________________________________________________________
 
 @admin_bp.route("/create-producer", methods=["POST"])
-@admin_required
+
+@login_required
 def create_producer():
     """Create a new producer account from the admin panel."""
+    if current_user.role != "admin":
+        flash("You do not have access to this page")
+        return redirect(url_for('auth.login'))
     name     = request.form.get("name", "").strip()
     email    = request.form.get("email", "").strip().lower()
     phone    = request.form.get("phone", "").strip()
@@ -182,8 +192,11 @@ def create_producer():
 
 
 @admin_bp.route("/manage-accounts/<int:user_id>/toggle-active", methods=["POST"])
-@admin_required
+@login_required
 def toggle_active(user_id):
+    if current_user.role != "admin":
+        flash("You do not have access to this page")
+        return redirect(url_for('auth.login'))
     target = db.session.get(User, user_id)
     if not target:
         flash("User not found.", "danger")
@@ -198,8 +211,12 @@ def toggle_active(user_id):
 
 
 @admin_bp.route("/manage-accounts/<int:user_id>/change-role", methods=["POST"])
-@admin_required
+@login_required
 def change_role(user_id):
+    if current_user.role != "admin":
+        flash("You do not have access to this page")
+        return redirect(url_for('auth.login'))
+
     target   = db.session.get(User, user_id)
     new_role = request.form.get("role", "")
 
@@ -214,3 +231,55 @@ def change_role(user_id):
         db.session.commit()
         flash(f"{target.name} is now a {new_role}.", "success")
     return redirect(url_for("admin.manage_accounts"))
+
+
+
+@admin_bp.route("/manage_products", methods=["POST", "GET"])
+@login_required
+def manage_products():
+    product_name     = request.form.get("product_name", "").strip()
+    category_id    = request.form.get("cat.id", "").strip().lower()
+    description   = request.form.get("description", "").strip()
+    price  = request.form.get("price", "").strip()
+    stock_quantity = request.form.get("stock_quantity", "")
+    producer_name = request.form.get("p.id","").strip()
+    product_image = request.files.get("product_image", "").strip()
+
+
+    # Validate file presence
+    if not product_image or product_image.filename.strip() == '':
+        flash("Please select image")
+        return redirect(url_for("admin.manage_products"))
+
+    product_image_data = product_image.read()
+
+    # Validate it's an image
+    if not imghdr.what(None, file_data):
+        flash("Please select image")
+        return redirect(url_for("admin.manage_products"))
+
+    #producers 
+    producers = User.query.filter_by(role="producer")
+    categories = Category.query.all()
+
+
+    #add the product to database
+    new_product(
+        
+        product_name = product_name,
+        description = description,
+        price = price,
+        stock_quantity = stock_quantity,
+        created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False),
+        producer_id = producer_name,
+        category_id = category_id,
+        product_image = product_image.filename,
+        mimetype = product_image.mimetype,
+        data = product_image_data
+    )
+
+    db.session.add(new_product)
+    db.session.commit()
+    
+    return render_template("admin/manage_products.html", user=current_user)
+    

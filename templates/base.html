@@ -7,11 +7,6 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/main.css">
-    <script
-    src="https://static.getwcag.com/widget.js"    
-    config-url="https://static.getwcag.com/configs/69FSXaLpmn7iu1yYomTm/config.json"
-    use-important="false"
-    ></script>
 </head>
 <body>
 
@@ -33,18 +28,22 @@
                     {% for link in nav_links %}
                         <li><a href="{{ link['url'] }}">{{ link['name'] }}</a></li>
                     {% endfor %}
-                    <li class="mobile-only"></li>
-                    <li class="mobile-only"></li>
+                    <li class="mobile-only"><a href="/register" class="btn-filled">Sign Up</a></li>
+                    <li class="mobile-only"><a href="/login" class="btn-outline">Login</a></li>
                 </ul>
             {% endif %}
         </nav>
 
         <div class="header-actions desktop-only">
-            <div class="search-box">
-                <input type="text" placeholder="Search...">
-            </div>
-            <a href="{{ url_for('auth.register') }}" class="btn-outline">Sign up</a>
-            <a href="{{ url_for('auth.login') }}" class="btn-filled">Login</a>
+            <form action="/shop" method="GET" class="search-box" role="search">
+                <input type="text" name="search" placeholder="Search products..." aria-label="Search products">
+            </form>
+            {% if current_user.is_authenticated %}
+            <a href="/cart" class="btn-outline">🛒 Cart</a>
+            {% else %}
+            <a href="/register" class="btn-filled">Sign Up</a>
+            <a href="/login" class="btn-outline">Login</a>
+            {% endif %}
         </div>
     </header>
     <main>
@@ -69,9 +68,9 @@
         <div class="footer-primary-content">
             <div class="logo-text">GH</div>
             <div class="footer-links-column">
-                <a href="#">About</a>
-                <a href="#">Our team</a>
-                <a href="#">Customer Care</a>
+                <a href="/about">About Us</a>
+                <a href="/shop">Our Shop</a>
+                <a href="/contact-us">Customer Care</a>
             </div>
             <div class="footer-contact-column">
                 <h4>Reach us</h4>
@@ -82,13 +81,14 @@
         </div>
         <div class="footer-legal">
             <nav class="legal-nav">
-                <a href="#">Terms & Conditions</a> |
-                <a href="#">Privacy Policy</a> |
-                <a href="#">Legal</a>
+                <a href="/terms">Terms of Use</a> |
+                <a href="/privacy">Privacy Policy</a> |
+                <a href="/contact-us">Contact</a>
             </nav>
             <p class="copyright">&copy; GLH 2026. All right reserved</p>
         </div>
     </footer>
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+<script src="/static/js/main.js"></script>
 </body>
 </html>
