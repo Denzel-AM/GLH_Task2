@@ -1,0 +1,25 @@
+.shop-sidebar {
+    display: flex;
+    flex-direction: row;
+}
+
+form {
+    display: flex;
+    flex-direction: row;
+}
+
+
+.category-list {
+    display: flex;
+    flex-direction: row;
+    list-style: none;
+    gap : 15px;
+    background-color: rgba(133, 133, 133, 0.219);
+    pad: 20px;
+}
+
+.category-list li a {
+    color: rgb(255, 142, 36);
+    font-size: 2rem;
+    pad: 20px;
+    }

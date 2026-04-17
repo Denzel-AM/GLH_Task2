@@ -64,7 +64,7 @@ class Product(db.Model):
 
     order_items = db.relationship("OrderItem", backref="product", lazy=True)
     stock_movements = db.relationship("StockMovement", backref="product", lazy=True, cascade="all, delete-orphan")
-    users = db.relationship("User", backref="product", lazy=True)
+    producer = db.relationship("User", backref="product", lazy=True)
 
     def update_availability(self):
         self.availability_status = "Out of Stock" if self.stock_quantity <= 0 else "In Stock"
@@ -128,7 +128,7 @@ class Loyalty(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     points = db.Column(db.Integer, default=0, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    level = db.column(db.String(50))
+    level = db.Column(db.String(50))
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, unique=True)
 
     def __repr__(self):

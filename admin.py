@@ -10,12 +10,13 @@ from models import (
     db,
     Order, OrderItem,
     Product, Category,
-    Loyalty, User, Enquiry
+    Loyalty, User, Enquiry, StockMovement
 )
 from auth import nav_for
 from auth import is_valid_password
 from io import BytesIO
 import imghdr
+from utils import save_product_image
 
 
 
@@ -234,52 +235,142 @@ def change_role(user_id):
 
 
 
-@admin_bp.route("/manage_products", methods=["POST", "GET"])
-@login_required
+# ─────────────────────────────────────────────────────────────────────────────
+# MANAGE PRODUCTS  (add / edit / stock / delete — across all producers)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@admin_bp.route("/manage-products", methods=["GET", "POST"])
+@admin_required
 def manage_products():
-    product_name     = request.form.get("product_name", "").strip()
-    category_id    = request.form.get("cat.id", "").strip().lower()
-    description   = request.form.get("description", "").strip()
-    price  = request.form.get("price", "").strip()
-    stock_quantity = request.form.get("stock_quantity", "")
-    producer_name = request.form.get("p.id","").strip()
-    product_image = request.files.get("product_image", "").strip()
-
-
-    # Validate file presence
-    if not product_image or product_image.filename.strip() == '':
-        flash("Please select image")
-        return redirect(url_for("admin.manage_products"))
-
-    product_image_data = product_image.read()
-
-    # Validate it's an image
-    if not imghdr.what(None, file_data):
-        flash("Please select image")
-        return redirect(url_for("admin.manage_products"))
-
-    #producers 
-    producers = User.query.filter_by(role="producer")
     categories = Category.query.all()
+    producers  = User.query.filter_by(role="producer").order_by(User.name).all()
 
+    if request.method == "POST":
+        action = request.form.get("action")
 
-    #add the product to database
-    new_product(
-        
-        product_name = product_name,
-        description = description,
-        price = price,
-        stock_quantity = stock_quantity,
-        created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False),
-        producer_id = producer_name,
-        category_id = category_id,
-        product_image = product_image.filename,
-        mimetype = product_image.mimetype,
-        data = product_image_data
+        # ── Add new product ────────────────────────────────────────────────
+        if action == "add_product":
+            name        = request.form.get("product_name", "").strip()
+            description = request.form.get("description", "").strip()
+            category_id = request.form.get("category_id", type=int)
+            producer_id = request.form.get("producer_id", type=int) or None
+            price_str   = request.form.get("price", "")
+            stock_str   = request.form.get("stock_quantity", "")
+
+            try:
+                price = float(price_str)
+                stock = int(stock_str)
+            except ValueError:
+                flash("Please enter valid price and stock values.", "danger")
+                return redirect(url_for("admin.manage_products"))
+
+            if not name or price <= 0 or stock < 0 or not category_id:
+                flash("Please fill in all required product fields.", "danger")
+            else:
+                image_url = save_product_image(request.files.get("product_image"))
+                if request.files.get("product_image") and request.files["product_image"].filename and not image_url:
+                    flash("Invalid image type. Allowed: jpg, jpeg, png, gif, webp.", "danger")
+                    return redirect(url_for("admin.manage_products"))
+
+                product = Product(
+                    product_name  = name,
+                    description   = description,
+                    price         = round(price, 2),
+                    stock_quantity= stock,
+                    category_id   = category_id,
+                    producer_id   = producer_id,
+                    image_url     = image_url,
+                )
+                product.update_availability()
+                db.session.add(product)
+                if stock > 0:
+                    db.session.flush()
+                    db.session.add(StockMovement(
+                        product_id    = product.id,
+                        change_amount = stock,
+                        movement_type = "restock",
+                        note          = "Initial stock — added by admin",
+                    ))
+                db.session.commit()
+                flash(f"Product '{name}' added.", "success")
+
+        # ── Update stock ───────────────────────────────────────────────────
+        elif action == "update_stock":
+            product_id = request.form.get("product_id", type=int)
+            new_qty    = request.form.get("quantity", type=int)
+            note       = request.form.get("note", "").strip()
+
+            product = db.session.get(Product, product_id)
+            if not product:
+                flash("Product not found.", "danger")
+            elif new_qty is None or new_qty < 0:
+                flash("Invalid stock quantity.", "danger")
+            else:
+                change = new_qty - product.stock_quantity
+                product.stock_quantity = new_qty
+                product.update_availability()
+                db.session.add(StockMovement(
+                    product_id    = product.id,
+                    change_amount = change,
+                    movement_type = "manual_adjustment",
+                    note          = note or "Admin stock update",
+                ))
+                db.session.commit()
+                flash(f"Stock updated for '{product.product_name}'.", "success")
+
+        # ── Update product details ─────────────────────────────────────────
+        elif action == "update_product":
+            product_id  = request.form.get("product_id", type=int)
+            name        = request.form.get("product_name", "").strip()
+            description = request.form.get("description", "").strip()
+            price_str   = request.form.get("price", "")
+            category_id = request.form.get("category_id", type=int)
+            producer_id = request.form.get("producer_id", type=int) or None
+
+            product = db.session.get(Product, product_id)
+            if not product:
+                flash("Product not found.", "danger")
+            else:
+                try:
+                    price = float(price_str)
+                except ValueError:
+                    flash("Invalid price value.", "danger")
+                    return redirect(url_for("admin.manage_products"))
+                new_image = save_product_image(request.files.get("product_image"))
+                if request.files.get("product_image") and request.files["product_image"].filename and not new_image:
+                    flash("Invalid image type. Allowed: jpg, jpeg, png, gif, webp.", "danger")
+                    return redirect(url_for("admin.manage_products"))
+
+                product.product_name = name or product.product_name
+                product.description  = description
+                product.price        = round(price, 2)
+                if category_id:
+                    product.category_id = category_id
+                product.producer_id = producer_id
+                if new_image:
+                    product.image_url = new_image
+                db.session.commit()
+                flash(f"Product '{product.product_name}' updated.", "success")
+
+        # ── Delete product ─────────────────────────────────────────────────
+        elif action == "delete_product":
+            product_id = request.form.get("product_id", type=int)
+            product = db.session.get(Product, product_id)
+            if product:
+                db.session.delete(product)
+                db.session.commit()
+                flash("Product deleted.", "success")
+            else:
+                flash("Product not found.", "danger")
+
+        return redirect(url_for("admin.manage_products"))
+
+    products = Product.query.order_by(Product.product_name).all()
+    return render_template(
+        "admin/manage_products.html",
+        products=products,
+        categories=categories,
+        producers=producers,
+        user=current_user,
+        nav_links=nav_for(current_user),
     )
-
-    db.session.add(new_product)
-    db.session.commit()
-    
-    return render_template("admin/manage_products.html", user=current_user)
-    
