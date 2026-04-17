@@ -81,9 +81,9 @@ class Order(db.Model):
     order_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     total_amount = db.Column(db.Float, nullable=False)
     order_status = db.Column(db.String(50), nullable=False, default="Pending")
-
+    delivery_type = db.Column(db.String(20), nullable=False, default="collection")
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-
+    delivery_address = db.Column(db.Text, nullable=True)
     order_items = db.relationship("OrderItem", backref="order", lazy=True, cascade="all, delete-orphan")
 
     def __repr__(self):

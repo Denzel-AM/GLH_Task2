@@ -5,7 +5,7 @@ import re
 import shutil
 import json
 from datetime import date, datetime
-from models import db, User , Category
+from models import db, User , Category, Loyalty, Product
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
@@ -23,8 +23,9 @@ from shop import shop_bp
 
 
 
-
-
+# ─────────────────────────────────────────────────────────────────────────────
+# SEED ROUTE — visit /seed in the browser to populate demo data
+# ─────────────────────────────────────────────────────────────────────────────
 
 # import your auth blueprint
 from auth import auth_bp, login_manager
@@ -65,6 +66,145 @@ def seed_cartegories():
             db.session.add(cat)
         db.session.flush()
         db.session.commit()
+def _get_or_create_user(email, **kwargs):
+    """Return existing user by email, or create and return a new one."""
+    user = User.query.filter_by(email=email).first()
+    if user:
+        return user, False
+    password = kwargs.pop("password")
+    user = User(email=email, **kwargs)
+    user.set_password(password)
+    db.session.add(user)
+    return user, True
+# sedding producers and products 
+def seed_data():
+    """Populate the database with demo categories, products and users.
+    Safe to call multiple times — skips existing records."""
+
+    # --- Categories (skip if already present) ---
+    if not Category.query.first():
+        categories = [
+            Category(category_name="Vegetables"),
+            Category(category_name="Fruit"),
+            Category(category_name="Dairy"),
+            Category(category_name="Bakery"),
+            Category(category_name="Honey & Preserves"),
+            Category(category_name="Meat & Eggs"),
+        ]
+        for cat in categories:
+            db.session.add(cat)
+        db.session.flush()
+
+    cat_map = {c.category_name: c.id for c in Category.query.all()}
+
+    # --- Users (skip any that already exist) ---
+    admin_user, _ = _get_or_create_user(
+        "admin@glh.co.uk", password="Admin@1234!",
+        name="Admin GLH", phone="01234000001",
+        address="132 Dartmouth Street, Bletchley", role="admin",
+    )
+    db.session.flush()
+
+    producer1, _ = _get_or_create_user(
+        "tom@greenacre.farm", password="Farmer@1234!",
+        name="Tom Hargreaves", phone="01234000002",
+        address="Green Acre Farm, Buckinghamshire", role="producer",
+    )
+    db.session.flush()
+
+    producer2, _ = _get_or_create_user(
+        "sarah@bloomfield.co.uk", password="Farmer@1234!",
+        name="Sarah Bloom", phone="01234000003",
+        address="Bloomfield Dairy, Northamptonshire", role="producer",
+    )
+    db.session.flush()
+
+    demo_customer, created = _get_or_create_user(
+        "customer@glh.co.uk", password="Customer@1234!",
+        name="Alex Johnson", phone="07700900001",
+        address="10 Mill Lane, Milton Keynes, MK1 1AA",
+        role="customer", loyalty_points=250,
+    )
+    db.session.flush()
+
+    if created and not demo_customer.loyalty_account:
+        db.session.add(Loyalty(user_id=demo_customer.id, points=250))
+
+    # --- Products (skip if already present) ---
+    if not Product.query.first():
+        products = [
+            # Vegetables
+            Product(product_name="Heritage Tomatoes",
+                    description="Sweet, vine-ripened heirloom tomatoes picked at peak season.",
+                    price=2.50, stock_quantity=80, category_id=cat_map["Vegetables"],
+                    image_url="/static/images/hayley-ryczek-pNcFMdEe09Q-unsplash.jpg",
+                    producer_id=producer1.id),
+            Product(product_name="Mixed Salad Leaves",
+                    description="A fresh blend of seasonal salad leaves, ready to eat.",
+                    price=1.80, stock_quantity=60, category_id=cat_map["Vegetables"],
+                    image_url="/static/images/cindie-hansen-ak2UGvCPDk8-unsplash.jpg",
+                    producer_id=producer1.id),
+            Product(product_name="Tenderstem Broccoli",
+                    description="Crisp tenderstem broccoli, harvested daily.",
+                    price=1.99, stock_quantity=45, category_id=cat_map["Vegetables"],
+                    image_url="/static/images/fernando-andrade-nAOZCYcLND8-unsplash.jpg",
+                    producer_id=producer1.id),
+            # Fruit
+            Product(product_name="Seasonal Apple Box (5kg)",
+                    description="A selection of locally grown apples — crisp and naturally sweet.",
+                    price=6.50, stock_quantity=40, category_id=cat_map["Fruit"],
+                    image_url="/static/images/gemma-c-stpjHJGqZyw-unsplash.jpg",
+                    producer_id=producer1.id),
+            Product(product_name="Mixed Berry Punnet",
+                    description="Strawberries, raspberries and blueberries from local polytunnels.",
+                    price=3.20, stock_quantity=30, category_id=cat_map["Fruit"],
+                    image_url="/static/images/allec-gomes-xnRg3xDcNnE-unsplash.jpg",
+                    producer_id=producer1.id),
+            # Dairy
+            Product(product_name="Whole Milk (2L)",
+                    description="Unhomogenised whole milk from grass-fed cows.",
+                    price=1.60, stock_quantity=100, category_id=cat_map["Dairy"],
+                    image_url="/static/images/andrew-molyneaux-o_qvA6R7hgs-unsplash.jpg",
+                    producer_id=producer2.id),
+            Product(product_name="Mature Cheddar (250g)",
+                    description="Aged for 12 months — sharp, crumbly and full of flavour.",
+                    price=3.50, stock_quantity=55, category_id=cat_map["Dairy"],
+                    image_url="/static/images/andrey-haimin-qtwlKiu6VHg-unsplash.jpg",
+                    producer_id=producer2.id),
+            # Bakery
+            Product(product_name="Sourdough Loaf",
+                    description="Long-fermented sourdough with a crisp crust and open crumb.",
+                    price=4.00, stock_quantity=20, category_id=cat_map["Bakery"],
+                    image_url="/static/images/karyna-panchenko-T4QUfXJNwZc-unsplash.jpg",
+                    producer_id=producer2.id),
+            # Honey & Preserves
+            Product(product_name="Wildflower Honey (340g)",
+                    description="Raw, unfiltered honey from local hives — full of natural goodness.",
+                    price=5.50, stock_quantity=35, category_id=cat_map["Honey & Preserves"],
+                    image_url="/static/images/kg-baek-aeE-Y7SVVR4-unsplash.jpg",
+                    producer_id=producer1.id),
+            Product(product_name="Damson Jam (200g)",
+                    description="Traditional recipe using hand-picked damsons. No artificial additives.",
+                    price=2.80, stock_quantity=50, category_id=cat_map["Honey & Preserves"],
+                    image_url="/static/images/giorgio-trovato-fczCr7MdE7U-unsplash.jpg",
+                    producer_id=producer1.id),
+            # Meat & Eggs
+            Product(product_name="Free-Range Eggs (12)",
+                    description="A dozen large eggs from hens raised on pasture.",
+                    price=3.20, stock_quantity=70, category_id=cat_map["Meat & Eggs"],
+                    image_url="/static/images/kyle-mackie-MEnlQv-EQvY-unsplash.jpg",
+                    producer_id=producer2.id),
+            Product(product_name="Pork Sausages (6 pack)",
+                    description="Traditional pork sausages, 85% pork with natural casings.",
+                    price=4.50, stock_quantity=25, category_id=cat_map["Meat & Eggs"],
+                    image_url="/static/images/sergey-kotenev-j-17JLHMIpk-unsplash.jpg",
+                    producer_id=producer2.id),
+        ]
+        for p in products:
+            p.update_availability()
+            db.session.add(p)
+
+    db.session.commit()
 
 # --- register blueprint ---
 app.register_blueprint(auth_bp)
@@ -80,6 +220,7 @@ with app.app_context():
     db.create_all()
     seed_admin_user()
     seed_cartegories()
+    seed_data()
     migrate = Migrate(app, db)
 #--- nav links setup ---
 nav_links = [
@@ -196,6 +337,7 @@ def logout():
     logout_user()
     flash('You have been logged out.', 'success')
     return redirect(url_for('home'))
+
 
 
 

@@ -19,9 +19,9 @@
             <a href="#" class="active"><i class="icon">👤</i> Profile</a>
             <a href="#"><i class="icon">🕒</i> Order History</a>
             <a href="{{ url_for('auth.account_settings') }}"><i class="icon">⚙️</i> Account Settings</a>
-            <a href="#"><i class="icon">🛒</i> Cart</a>
+            <a href="{{ url_for('shop.view_cart') }}"><i class="icon">🛒</i> Cart</a>
             <a href="#"><i class="icon">⭐</i> Loyalty Rewards</a>
-            <a href="#"><i class="icon">🏪</i> Go to shop</a>
+            <a href="{ url_for('shop.shop') }}"><i class="icon">🏪</i> Go to shop</a>
             <a href="{{ url_for('auth.logout') }}"><i class="icon">🚪</i> Logout</a>
         </nav>
 

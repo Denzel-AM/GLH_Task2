@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block head %}Checkout — GreenField Local Hub{% endblock %}
+
+{% block body %}
+<link rel="stylesheet" href="/static/css/shop.css">
+
+<div class="checkout-page">
+    <div class="checkout-header">
+        <h1>Checkout</h1>
+        <a href="{{ url_for('shop.view_cart') }}" class="back-link">← Back to Cart</a>
+    </div>
+
+    <div class="checkout-layout">
+
+        <!-- Order Form -->
+        <form method="POST" action="{{ url_for('shop.checkout') }}" class="checkout-form">
+
+            <!-- Delivery Options -->
+            <div class="checkout-section">
+                <h2>Collection or Delivery?</h2>
+                <div class="delivery-options">
+                    <label class="delivery-option" for="opt-collection">
+                        <input type="radio" id="opt-collection" name="delivery_type" value="collection"
+                               checked onchange="toggleDelivery(this)">
+                        <div class="option-card">
+                            <span class="option-icon">🏪</span>
+                            <div>
+                                <strong>Collection</strong>
+                                <p>Pick up from our hub — 132 Dartmouth Street, Bletchley</p>
+                                <p class="option-price">Free</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="delivery-option" for="opt-delivery">
+                        <input type="radio" id="opt-delivery" name="delivery_type" value="delivery"
+                               onchange="toggleDelivery(this)">
+                        <div class="option-card">
+                            <span class="option-icon">🚐</span>
+                            <div>
+                                <strong>Home Delivery</strong>
+                                <p>Delivered to your door within 2 business days</p>
+                                <p class="option-price">Free on orders over £15</p>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+                <div id="delivery-address-section" style="display:none; margin-top:15px;">
+                    <label class="form-label" for="delivery_address">Delivery Address</label>
+                    <textarea id="delivery_address" name="delivery_address" rows="3"
+                              class="form-control"
+                              placeholder="Enter your delivery address...">{{ current_user.address }}</textarea>
+                    <p class="form-hint">Your saved address has been pre-filled. Edit if needed.</p>
+                </div>
+            </div>
+
+            <!-- Loyalty Points -->
+            {% if loyalty_points >= 100 %}
+            <div class="checkout-section">
+                <h2>Loyalty Points</h2>
+                <div class="loyalty-box">
+                    <div class="loyalty-balance">
+                        <span class="star">⭐</span>
+                        <div>
+                            <strong>{{ loyalty_points }} points available</strong>
+                            <p>Worth £{{ "%.2f"|format(loyalty_points / 100) }} in credit</p>
+                        </div>
+                    </div>
+                    <label class="loyalty-toggle">
+                        <input type="checkbox" name="use_loyalty" value="on" id="loyalty-check"
+                               onchange="updateTotal()">
+                        <span>Apply up to £{{ "%.2f"|format(available_discount) }} discount (max 20% of order)</span>
+                    </label>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Order Summary in Form -->
+            <div class="checkout-section">
+                <h2>Your Items</h2>
+                <table class="checkout-items-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in cart_items %}
+                        <tr>
+                            <td>{{ item.product.product_name }}</td>
+                            <td>× {{ item.quantity }}</td>
+                            <td>£{{ "%.2f"|format(item.subtotal) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <button type="submit" class="btn-place-order">Place Order</button>
+            <p class="order-note">By placing your order you agree to our <a href="{{ url_for('privacy') }}">Privacy Policy</a>.</p>
+        </form>
+
+        <!-- Summary Sidebar -->
+        <div class="checkout-summary">
+            <div class="summary-card">
+                <h2>Order Total</h2>
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span id="subtotal-display">£{{ "%.2f"|format(subtotal) }}</span>
+                </div>
+                {% if loyalty_points >= 100 %}
+                <div class="summary-row loyalty-discount-row" id="discount-row" style="display:none;">
+                    <span>Loyalty Discount</span>
+                    <span class="discount-val">−£{{ "%.2f"|format(available_discount) }}</span>
+                </div>
+                {% endif %}
+                <div class="summary-divider"></div>
+                <div class="summary-row total-row">
+                    <strong>Total</strong>
+                    <strong id="total-display">£{{ "%.2f"|format(subtotal) }}</strong>
+                </div>
+                <p class="points-earn-note">
+                    You'll earn approximately <strong id="points-earn">{{ subtotal|int }}</strong> loyalty points.
+                </p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const subtotal = {{ subtotal }};
+    const discount = {{ available_discount }};
+
+    function toggleDelivery(radio) {
+        const section = document.getElementById('delivery-address-section');
+        section.style.display = radio.value === 'delivery' ? 'block' : 'none';
+    }
+
+    function updateTotal() {
+        const useLoyalty = document.getElementById('loyalty-check') && document.getElementById('loyalty-check').checked;
+        const discountRow = document.getElementById('discount-row');
+        const totalDisplay = document.getElementById('total-display');
+        const pointsEarn = document.getElementById('points-earn');
+
+        let finalTotal = subtotal;
+        if (useLoyalty && discount > 0) {
+            finalTotal = subtotal - discount;
+            if (discountRow) discountRow.style.display = 'flex';
+        } else {
+            if (discountRow) discountRow.style.display = 'none';
+        }
+        finalTotal = Math.max(0, finalTotal);
+        totalDisplay.textContent = '£' + finalTotal.toFixed(2);
+        pointsEarn.textContent = Math.floor(finalTotal);
+    }
+</script>
+
+{% endblock %}

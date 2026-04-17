@@ -29,7 +29,12 @@
         <div class="shop-sidebar">
             <form method="GET" action="{{ url_for('shop.shop') }}">
                 
-
+                <div class="filter-section">
+                    <h3>Search</h3>
+                    <div class="search-input-wrap">
+                        <input type="text" name="search" value="{{ search }}" placeholder="Search products..." class="filter-search">
+                    </div>
+                </div>
                 <div class="filter-section">
                     <h3>Category</h3>
                     <ul class="category-list">
@@ -44,7 +49,7 @@
                             <a href="{{ url_for('shop.shop', category=cat.id, search=search) }}"
                                class="cat-link {% if selected_category == cat.id %}active{% endif %}">
                                {{ cat.category_name }}
-                               <span class="cat-count">{{ cat.products|length }}</span>|
+                               <span class="cat-count">{{ cat.products|length }}</span> |
                             </a>
                         </li>
                         {% endfor %}
@@ -54,12 +59,7 @@
                 <button type="submit" class="btn-filter">Apply Filters</button>
                 <a href="{{ url_for('shop.shop') }}" class="clear-filters">Clear all</a>
 
-                <div class="filter-section">
-                    <h3>Search</h3>
-                    <div class="search-input-wrap">
-                        <input type="text" name="search" value="{{ search }}" placeholder="Search products..." class="filter-search">
-                    </div>
-                </div>
+                
             </form>
         <div>
 
