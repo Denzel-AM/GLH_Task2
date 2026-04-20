@@ -21,7 +21,7 @@
             <a href="{{ url_for('auth.logout') }}"><i class="icon">🚪</i> Logout</a>
         </nav>
         <div class="sidebar-user">
-            <div class="user-avatar">{{ user.get_initials() }}</div>
+            <div class="user-avatar">{{ name }}</div>
             <div class="user-info">
                 <strong>{{ user.name }}</strong>
                 <span>Administrator</span>

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block head %}Order History — GreenField Local Hub{% endblock %}
+
+{% block body %}
+<link rel="stylesheet" href="/static/css/dashboard.css">
+
+<div class="dashboard-wrapper">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h1>GL<span>H</span></h1>
+            <p>Greenfield Local Hub</p>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('customer.dashboard') }}"><i class="icon">👤</i> Profile</a>
+            <a href="{{ url_for('customer.orders') }}" class="active"><i class="icon">🕒</i> Order History</a>
+            <a href="{{ url_for('auth.account_settings') }}"><i class="icon">⚙️</i> Account Settings</a>
+            <a href="{{ url_for('shop.view_cart') }}"><i class="icon">🛒</i> Cart</a>
+            <a href="{{ url_for('shop.shop') }}"><i class="icon">🏪</i> Go to Shop</a>
+            <a href="{{ url_for('auth.logout') }}"><i class="icon">🚪</i> Logout</a>
+        </nav>
+        <div class="sidebar-user">
+            <div class="user-avatar">{{ name }}</div>
+            <div class="user-info">
+                <strong>{{ user.name }}</strong>
+                <span>Customer</span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="content-header">
+            <div class="header-left">
+                <h2>Order History</h2>
+                <p class="subtitle">All your past orders in one place.</p>
+            </div>
+            <a href="{{ url_for('shop.shop') }}" class="btn-filled">Shop Again</a>
+        </header>
+
+        {% if orders %}
+        <section class="recent-orders">
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Order ID</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>{{ order.order_date.strftime('%d %b %Y') }}</td>
+                        <td><strong>#GLH-{{ "%04d"|format(order.id) }}</strong></td>
+                        <td>
+                            {% set names = order.order_items[:3]|map(attribute='product.product_name')|list %}
+                            {{ names|join(', ') }}{% if order.order_items|length > 3 %} +{{ order.order_items|length - 3 }} more{% endif %}
+                        </td>
+                        <td>£{{ "%.2f"|format(order.total_amount) }}</td>
+                        <td>{{ order.delivery_type|capitalize }}</td>
+                        <td>
+                            <span class="status-pill status-{{ order.order_status|lower|replace(' ', '-') }}">
+                                {{ order.order_status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📦</div>
+            <h3>No orders yet</h3>
+            <p>You haven't placed any orders. Browse our fresh local produce!</p>
+            <a href="{{ url_for('shop.shop') }}" class="btn-filled">Start Shopping</a>
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

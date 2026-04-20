@@ -226,7 +226,10 @@ def checkout():
         if loyalty_discount > 0:
             msg += f" Loyalty discount applied: £{loyalty_discount:.2f}."
         flash(msg, "success")
-        return redirect(url_for("customer.dashboard"))
+
+
+        order_id = oi.order_id
+        return redirect(url_for("shop.success", order_id=order_id))
 
     # Loyalty context for template
     available_discount = 0.0
@@ -242,3 +245,18 @@ def checkout():
         loyalty_points=current_user.loyalty_points,
         nav_links=_get_nav(),
     )
+
+@shop_bp.route("/success/<int:order_id>", methods=["GET", "POST"])
+@login_required
+def success(order_id):
+    order = Order.query.get_or_404(order_id)
+    #make sure its the user's order
+    if order.user_id != current_user.id:
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for("auth.login"))
+
+    if order.order_status != "confirmed":
+        return redirect(url_for("shop.checkout", order_id=order_id))
+    
+
+    return render_template("success.html", order=order, nav_links=_get_nav() )

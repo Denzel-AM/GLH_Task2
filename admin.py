@@ -374,3 +374,44 @@ def manage_products():
         user=current_user,
         nav_links=nav_for(current_user),
     )
+
+
+
+# MANAGE ORDERS
+# ─────────────────────────────────────────────────────────────────────────────
+
+@admin_bp.route("/orders")
+@admin_required
+def orders():
+    status_filter = request.args.get("status", "")
+    query = Order.query
+    if status_filter:
+        query = query.filter_by(order_status=status_filter)
+    all_orders = query.order_by(Order.order_date.desc()).all()
+
+    return render_template(
+        "admin/orders.html",
+        orders=all_orders,
+        status_filter=status_filter,
+        user=current_user,
+        nav_links=nav_for(current_user),
+    )
+
+
+@admin_bp.route("/orders/<int:order_id>/update-status", methods=["POST"])
+@admin_required
+def update_order_status(order_id):
+    order      = db.session.get(Order, order_id)
+    new_status = request.form.get("status", "")
+    valid_statuses = ("Pending", "Confirmed", "Processing", "Out for Delivery", "Delivered", "Cancelled")
+
+    if not order:
+        flash("Order not found.", "danger")
+    elif new_status not in valid_statuses:
+        flash("Invalid status.", "danger")
+    else:
+        order.order_status = new_status
+        db.session.commit()
+        flash(f"Order #GLH-{order.id:04d} updated to '{new_status}'.", "success")
+
+    return redirect(url_for("admin.orders"))

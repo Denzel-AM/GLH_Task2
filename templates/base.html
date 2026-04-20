@@ -12,6 +12,40 @@
     config-url="https://static.getwcag.com/configs/69FSXaLpmn7iu1yYomTm/config.json"
     use-important="false"
     ></script>
+    <style>
+        /*cookie banner*/
+        .pop-up-cookies {
+        position: relative;
+        width: 100%;
+        background-color: #333;
+        color: white;
+        text-align: center;
+        padding: 15px;
+        z-index: 1000;
+        }
+
+        .pop-up-cookies button {
+        margin: 0 10px;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+        }
+
+        #accept-cookies {
+        background-color: #4CAF50; /* Green */
+        color: white;
+        }
+
+        #reject-cookies {
+        background-color: #f44336; /* Red */
+        color: white;
+        }
+
+        .navigation {
+        margin-right: 80px;
+        }
+    </style>
 </head>
 <body>
 
@@ -51,6 +85,10 @@
             {% endif %}
         </div>
     </header>
+    <div class="pop-up-cookies" id="cookie-consent-banner">
+    <p>We use cookies to enhance your experience. By continuing to visit this site you agree to our use of cookies.</p>
+    <button id="accept-cookies">Accept</button><button id="reject-cookies">Reject</button>
+  </div>
     <main>
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
@@ -95,5 +133,31 @@
     </footer>
 
 <script src="/static/js/main.js"></script>
+
+<!--The cookie banner -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+  /// Cookie Consent Banner Logic and make user accept or reject cookies only once
+  document.addEventListener('DOMContentLoaded', function() {
+    const banner = document.getElementById('cookie-consent-banner');
+    const acceptBtn = document.getElementById('accept-cookies');
+    const rejectBtn = document.getElementById('reject-cookies');
+
+    // Check if user has already made a choice
+    if (localStorage.getItem('cookieConsent')) {
+      banner.style.display = 'none';
+    }
+
+    acceptBtn.addEventListener('click', function() {
+      localStorage.setItem('cookieConsent', 'accepted');
+      banner.style.display = 'none';
+    });
+
+    rejectBtn.addEventListener('click', function() {
+      localStorage.setItem('cookieConsent', 'rejected');
+      banner.style.display = 'none';
+    });
+  });
+</script>
 </body>
 </html>

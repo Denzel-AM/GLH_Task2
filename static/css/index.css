@@ -127,3 +127,36 @@ body {
     .hero-text p { margin: 0 auto 30px auto; }
     .hero-buttons { justify-content: center; }
 }
+
+/*cookie banner*/
+.pop-up-cookies {
+position: relative;
+width: 100%;
+background-color: #333;
+color: white;
+text-align: center;
+padding: 15px;
+z-index: 1000;
+}
+
+.pop-up-cookies button {
+margin: 0 10px;
+padding: 10px 20px;
+border: none;
+cursor: pointer;
+border-radius: 5px;
+}
+
+#accept-cookies {
+background-color: #4CAF50; /* Green */
+color: white;
+}
+
+#reject-cookies {
+background-color: #f44336; /* Red */
+color: white;
+}
+
+.navigation {
+margin-right: 80px;
+}
