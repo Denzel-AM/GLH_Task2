@@ -46,36 +46,60 @@ def unauthorized():
     return redirect(url_for("auth.login"))
 
 
-_ALL_NAV = [
-    {"name": "Home",        "url": "/"},
-    {"name": "About Us",    "url": "/about-us"},
-    {"name": "Privacy",     "url": "/privacy"},
-    {"name": "Shop",        "url": "/shop"},
-    {"name": "Dashboard",   "url": "/dashboard"},
-    {"name": "Login",       "url": "/login"},
-    {"name": "Register",    "url": "/register"},
-    {"name": "Logout",      "url": "/logout"},
-]
-
-# Convenience subsets (index references into _ALL_NAV above)
 NAV = {
-    "public":    [_ALL_NAV[i] for i in (0, 1, 2, 3)],
-    "login":     [_ALL_NAV[i] for i in (0, 1, 3, 6)],
-    "register":  [_ALL_NAV[i] for i in (0, 1, 3, 5)],
-    "dashboard": [_ALL_NAV[i] for i in (0, 3, 4, 7)],
-    "admin":     _ALL_NAV,
+    "public": [
+        {"name": "Home",    "url": "/"},
+        {"name": "About",   "url": "/about"},
+        {"name": "Shop",    "url": "/shop"},
+        {"name": "Contact", "url": "/contact-us"},
+    ],
+    "login": [
+        {"name": "Home",     "url": "/"},
+        {"name": "About",    "url": "/about"},
+        {"name": "Shop",     "url": "/shop"},
+        {"name": "Register", "url": "/register"},
+    ],
+    "register": [
+        {"name": "Home",  "url": "/"},
+        {"name": "About", "url": "/about"},
+        {"name": "Shop",  "url": "/shop"},
+        {"name": "Login", "url": "/login"},
+    ],
+    "customer": [
+        {"name": "Home",      "url": "/"},
+        {"name": "Shop",      "url": "/shop"},
+        {"name": "My Orders", "url": "/orders"},
+        {"name": "Dashboard", "url": "/dashboard"},
+        {"name": "Logout",    "url": "/logout"},
+    ],
+    "producer": [
+        {"name": "Home",         "url": "/"},
+        {"name": "Dashboard",    "url": "/producer/dashboard"},
+        {"name": "Manage Stock", "url": "/producer/manage-stock"},
+        {"name": "Settings",     "url": "/producer/settings"},
+        {"name": "Logout",       "url": "/logout"},
+    ],
+    "admin": [
+        {"name": "Home",             "url": "/"},
+        {"name": "Admin Dashboard",  "url": "/admin/dashboard"},
+        {"name": "Manage Accounts",  "url": "/admin/manage-accounts"},
+        {"name": "Manage Products",  "url": "/admin/manage-products"},
+        {"name": "All Orders",       "url": "/admin/orders"},
+        {"name": "Settings",         "url": "/account-settings"},
+        {"name": "Logout",           "url": "/logout"},
+    ],
 }
 
-
-def nav_for(user=None) -> list:
-    """Return the correct nav link set for the given user (or anonymous)."""
-    if user.role ==  "customer" :
-        return NAV["dashboard"]
+def nav_for(user) -> list:
+    """Return the correct nav link set for the given user."""
     if user.role == "producer":
-        return NAV["dashboard"]
+        return NAV["producer"]
     if user.role == "admin":
         return NAV["admin"]
-    return NAV["dashboard"]
+    return NAV["customer"]
+
+
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────
