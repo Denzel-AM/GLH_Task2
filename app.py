@@ -20,6 +20,9 @@ from admin import admin_bp
 from producers import producer_bp
 from flask_migrate import Migrate
 from shop import shop_bp
+import stripe
+
+
 
 
 

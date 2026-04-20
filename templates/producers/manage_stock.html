@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block head %}Manage Stock — GreenField Local Hub{% endblock %}
+
+{% block body %}
+<link rel="stylesheet" href="/static/css/dashboard.css">
+<link rel="stylesheet" href="/static/css/producer.css">
+
+<div class="dashboard-wrapper">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h1>GL<span>H</span></h1>
+            <p>Producer Portal</p>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('producer.dashboard') }}"><i class="icon">📊</i> Dashboard</a>
+            <a href="{{ url_for('producer.manage_stock') }}" class="active"><i class="icon">📦</i> Manage Stock</a>
+            <a href="{{ url_for('pauth.account_settings') }}"><i class="icon">⚙️</i> Settings</a>
+            <a href="{{ url_for('auth.logout') }}"><i class="icon">🚪</i> Logout</a>
+        </nav>
+        <div class="sidebar-user">
+            <div class="user-avatar">{{ name }}</div>
+            <div class="user-info">
+                <strong>{{ user.name }}</strong>
+                <span>Producer</span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="content-header">
+            <div class="header-left">
+                <h2>Manage Stock</h2>
+                <p class="subtitle">Update quantities, add new products, or edit product details.</p>
+            </div>
+        </header>
+
+        <!-- Add New Product -->
+        <section class="settings-card">
+            <h3>Add New Product</h3>
+            <form method="POST" action="{{ url_for('producer.manage_stock') }}" class="settings-form" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="add_product">
+                <div class="form-row-2">
+                    <div class="settings-field">
+                        <label for="new-name">Product Name</label>
+                        <input type="text" id="new-name" name="product_name" placeholder="e.g. Heritage Tomatoes" required>
+                    </div>
+                    <div class="settings-field">
+                        <label for="new-category">Category</label>
+                        <select id="new-category" name="category_id" class="form-select" required>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if loop.first %}selected{% endif %}>{{ cat.category_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="settings-field">
+                    <label for="new-desc">Description</label>
+                    <textarea id="new-desc" name="description" rows="2" class="form-control" placeholder="Brief description of the product..."></textarea>
+                </div>
+                <div class="form-row-2">
+                    <div class="settings-field">
+                        <label for="new-price">Price (£)</label>
+                        <input type="number" id="new-price" name="price" step="0.01" min="0.01" placeholder="0.00" required>
+                    </div>
+                    <div class="settings-field">
+                        <label for="new-stock">Initial Stock Quantity</label>
+                        <input type="number" id="new-stock" name="stock_quantity" min="0" placeholder="0" required>
+                    </div>
+                </div>
+                <div class="settings-field">
+                    <label for="new-image">Product Image</label>
+                    <input type="file" id="new-image" name="product_image" accept="image/*" class="form-control">
+                    <small class="field-hint">Optional. jpg, jpeg, png, gif, webp — max 5 MB</small>
+                </div>
+                <button type="submit" class="btn-filled">Add Product</button>
+            </form>
+        </section>
+
+        <!-- Current Products -->
+        <section class="settings-card settings-card--mt">
+            <h3>Your Products</h3>
+            {% if products %}
+            <div class="stock-table-wrap">
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Status</th>
+                            <th>Update Stock</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in products %}
+                        <tr class="{% if p.stock_quantity == 0 %}row-oos{% elif p.stock_quantity <= 5 %}row-low{% endif %}">
+                            <td><strong>{{ p.product_name }}</strong></td>
+                            <td>{{ p.category.category_name }}</td>
+                            <td>£{{ "%.2f"|format(p.price) }}</td>
+                            <td>{{ p.stock_quantity }}</td>
+                            <td>
+                                <span class="status-pill {% if p.stock_quantity > 0 %}status-confirmed{% else %}status-cancelled{% endif %}">
+                                    {{ p.availability_status }}
+                                </span>
+                            </td>
+                            <td>
+                                <form method="POST" action="{{ url_for('producer.manage_stock') }}" class="inline-form">
+                                    <input type="hidden" name="action" value="update_stock">
+                                    <input type="hidden" name="product_id" value="{{ p.id }}">
+                                    <div class="stock-update-row">
+                                        <input type="number" name="quantity" value="{{ p.stock_quantity }}"
+                                               min="0" class="stock-qty-input" aria-label="New stock for {{ p.product_name }}">
+                                        <button type="submit" class="btn-sm-filled">Save</button>
+                                    </div>
+                                </form>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button type="button" class="btn-sm-outline" onclick="openEditModal({{ p.id }}, '{{ p.product_name|e }}', '{{ p.description|e }}', {{ p.price }}, {{ p.category_id }})">Edit</button>
+                                    <form method="POST" action="{{ url_for('producer.manage_stock') }}" class="inline-form"
+                                          onsubmit="return confirm('Delete {{ p.product_name }}? This cannot be undone.')">
+                                        <input type="hidden" name="action" value="delete_product">
+                                        <input type="hidden" name="product_id" value="{{ p.id }}">
+                                        <button type="submit" class="btn-sm-danger">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="no-data">You have no products yet. Add one above.</p>
+            {% endif %}
+        </section>
+    </main>
+</div>
+
+<!-- Edit Product Modal -->
+<div id="edit-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
+    <div class="modal-box">
+        <h3 id="edit-modal-title">Edit Product</h3>
+        <form method="POST" action="{{ url_for('producer.manage_stock') }}" class="settings-form" enctype="multipart/form-data">
+            <input type="hidden" name="action" value="update_product">
+            <input type="hidden" name="product_id" id="edit-product-id">
+            <div class="settings-field">
+                <label for="edit-name">Product Name</label>
+                <input type="text" id="edit-name" name="product_name" required>
+            </div>
+            <div class="settings-field">
+                <label for="edit-desc">Description</label>
+                <textarea id="edit-desc" name="description" rows="2" class="form-control"></textarea>
+            </div>
+            <div class="form-row-2">
+                <div class="settings-field">
+                    <label for="edit-price">Price (£)</label>
+                    <input type="number" id="edit-price" name="price" step="0.01" min="0.01" required>
+                </div>
+                <div class="settings-field">
+                    <label for="edit-category">Category</label>
+                    <select id="edit-category" name="category_id" class="form-select" required>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.category_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="settings-field">
+                <label for="edit-image">Replace Image</label>
+                <input type="file" id="edit-image" name="product_image" accept="image/*" class="form-control">
+                <small class="field-hint">Leave blank to keep existing image.</small>
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn-filled">Save Changes</button>
+                <button type="button" class="btn-outline" onclick="closeEditModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openEditModal(id, name, desc, price, catId) {
+        document.getElementById('edit-product-id').value = id;
+        document.getElementById('edit-name').value = name;
+        document.getElementById('edit-desc').value = desc;
+        document.getElementById('edit-price').value = price;
+        document.getElementById('edit-category').value = catId;
+        document.getElementById('edit-modal').classList.add('active');
+    }
+    function closeEditModal() {
+        document.getElementById('edit-modal').classList.remove('active');
+    }
+    document.getElementById('edit-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeEditModal();
+    });
+</script>
+{% endblock %}

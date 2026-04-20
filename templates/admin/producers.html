@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block head %}Producers — GreenField Local Hub{% endblock %}
+
+{% block extra_head %}
+<style>
+.producer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+}
+
+.producer-card {
+    background: #fff8f2;
+    border-radius: 14px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.producer-card-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.producer-avatar {
+    width: 52px;
+    height: 52px;
+    background: var(--sidebar-bg, #23394d);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.producer-name { font-size: 1.05rem; font-weight: 700; margin: 0; }
+.producer-status { font-size: 0.78rem; margin: 2px 0 0; }
+.producer-status.active { color: #1a7a3c; }
+.producer-status.inactive { color: #b91c1c; }
+
+.producer-details { display: flex; flex-direction: column; gap: 6px; font-size: 0.87rem; color: #444; }
+.producer-detail-row { display: flex; gap: 8px; }
+.detail-label { color: #999; min-width: 70px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; padding-top: 1px; }
+
+.producer-stats {
+    display: flex;
+    gap: 12px;
+    border-top: 1px solid #eee;
+    padding-top: 12px;
+}
+
+.pstat {
+    flex: 1;
+    text-align: center;
+    background: #fff;
+    border-radius: 8px;
+    padding: 10px 6px;
+}
+.pstat-value { font-size: 1.3rem; font-weight: 700; color: #23394d; }
+.pstat-label { font-size: 0.72rem; color: #999; margin-top: 2px; }
+
+.badge-inactive {
+    display: inline-block;
+    background: #fee2e2;
+    color: #b91c1c;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<link rel="stylesheet" href="/static/css/dashboard.css">
+<link rel="stylesheet" href="/static/css/producer.css">
+
+<div class="dashboard-wrapper">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h1>GL<span>H</span></h1>
+            <p>Admin Panel</p>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('admin.dashboard') }}"><i class="icon">📊</i> Dashboard</a>
+            <a href="{{ url_for('admin.manage_accounts') }}"><i class="icon">👥</i> Manage Accounts</a>
+            <a href="{{ url_for('admin.manage_products') }}"><i class="icon">🌿</i> Manage Products</a>
+            <a href="{{ url_for('admin.orders') }}"><i class="icon">📋</i> All Orders</a>
+            <a href="{{ url_for('admin.producers') }}" class="active"><i class="icon">🧑‍🌾</i> Producers</a>
+            <a href="{{ url_for('admin.enquiries') }}"><i class="icon">✉️</i> Enquiries</a>
+            <a href="{{ url_for('auth.account_settings') }}"><i class="icon">⚙️</i> Account Settings</a>
+            <a href="{{ url_for('auth.logout') }}"><i class="icon">🚪</i> Logout</a>
+        </nav>
+        <div class="sidebar-user">
+            <div class="user-avatar">{{ user.get_initials() }}</div>
+            <div class="user-info">
+                <strong>{{ user.name }}</strong>
+                <span>Administrator</span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="content-header">
+            <div class="header-left">
+                <h2>Producers</h2>
+                <p class="subtitle">{{ producers|length }} producer{{ 's' if producers|length != 1 }} registered on the platform.</p>
+            </div>
+            <a href="{{ url_for('admin.manage_accounts', role='producer') }}" class="btn-filled">Manage Accounts</a>
+        </header>
+
+        {% if producers %}
+        <div class="producer-grid">
+            {% for p in producers %}
+            <div class="producer-card">
+                <div class="producer-card-header">
+                    <div class="producer-avatar">{{ p.get_initials() }}</div>
+                    <div>
+                        <p class="producer-name">
+                            {{ p.name }}
+                            {% if not p.is_active %}<span class="badge-inactive">Inactive</span>{% endif %}
+                        </p>
+                        <p class="producer-status {% if p.is_active %}active{% else %}inactive{% endif %}">
+                            {% if p.is_active %}Active{% else %}Deactivated{% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="producer-details">
+                    <div class="producer-detail-row">
+                        <span class="detail-label">Email</span>
+                        <span>{{ p.email }}</span>
+                    </div>
+                    <div class="producer-detail-row">
+                        <span class="detail-label">Phone</span>
+                        <span>{{ p.phone or '—' }}</span>
+                    </div>
+                    <div class="producer-detail-row">
+                        <span class="detail-label">Address</span>
+                        <span>{{ p.address or '—' }}</span>
+                    </div>
+                    <div class="producer-detail-row">
+                        <span class="detail-label">Joined</span>
+                        <span>{{ p.created_at.strftime('%d %b %Y') }}</span>
+                    </div>
+                    <div class="producer-detail-row">
+                        <span class="detail-label">Last login</span>
+                        <span>{{ p.last_login.strftime('%d %b %Y') if p.last_login else 'Never' }}</span>
+                    </div>
+                </div>
+
+                <div class="producer-stats">
+                    <div class="pstat">
+                        <div class="pstat-value">{{ p.products|length }}</div>
+                        <div class="pstat-label">Products</div>
+                    </div>
+                    <div class="pstat">
+                        <div class="pstat-value">{{ p.products|selectattr('is_available')|list|length }}</div>
+                        <div class="pstat-label">Available</div>
+                    </div>
+                    <div class="pstat">
+                        <div class="pstat-value">{{ p.products|selectattr('stock_quantity', 'equalto', 0)|list|length }}</div>
+                        <div class="pstat-label">Out of Stock</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🧑‍🌾</div>
+            <h3>No producers yet</h3>
+            <p>Create a producer account from Manage Accounts.</p>
+            <a href="{{ url_for('admin.manage_accounts') }}" class="btn-filled">Manage Accounts</a>
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

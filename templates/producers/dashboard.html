@@ -13,9 +13,8 @@
         </div>
         <nav class="sidebar-nav">
             <a href="{{ url_for('producer.dashboard') }}" class="active"><i class="icon">📊</i> Dashboard</a>
-            <a href="#"><i class="icon">📦</i> Manage Stock</a>
-            <a href="#"><i class="icon">⚙️</i> Settings</a>
-            <a href="{{ url_for('auth.account_settings') }}"><i class="icon">🔒</i> Security</a>
+            <a href="{{ url_for('producer.manage_stock') }}"><i class="icon">📦</i> Manage Stock</a>
+            <a href="{{ url_for('auth.account_settings') }}"><i class="icon">⚙️</i> Account Settings</a>
             <a href="{{ url_for('auth.logout') }}"><i class="icon">🚪</i> Logout</a>
         </nav>
         <div class="sidebar-user">

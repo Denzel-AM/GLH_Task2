@@ -1,8 +1,10 @@
-from flask import Blueprint, render_template, request, session, redirect, url_for, flash
+import stripe
+from flask import Blueprint, render_template, request, session, redirect, url_for, flash, current_app, jsonify
 from flask_login import current_user, login_required
 from models import db, Product, Category, Order, OrderItem, StockMovement
 from datetime import datetime
 from auth import NAV, nav_for
+from config import Config, get_config
 
 shop_bp = Blueprint("shop", __name__)
 
@@ -140,7 +142,7 @@ def remove_from_cart():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CHECKOUT
+# CHECKOUT  (collects delivery info + loyalty choice, then goes to payment)
 # ─────────────────────────────────────────────────────────────────────────────
 
 @shop_bp.route("/checkout", methods=["GET", "POST"])
@@ -151,20 +153,28 @@ def checkout():
         flash("Your cart is empty.", "warning")
         return redirect(url_for("shop.shop"))
 
-    # Build cart items from DB
+    # Build cart items — recheck stock at this point
     cart_items = []
     subtotal = 0.0
     for product_id_str, qty in list(cart.items()):
         product = db.session.get(Product, int(product_id_str))
-        if product and product.stock_quantity > 0:
-            line_total = round(product.price * qty, 2)
-            subtotal += line_total
-            cart_items.append({
-                "product": product,
-                "quantity": qty,
-                "subtotal": line_total,
-            })
+        if not product:
+            continue
+        actual_qty = min(qty, product.stock_quantity)
+        if actual_qty <= 0:
+            continue
+        line_total = round(product.price * actual_qty, 2)
+        subtotal += line_total
+        cart_items.append({
+            "product": product,
+            "quantity": actual_qty,
+            "subtotal": line_total,
+        })
     subtotal = round(subtotal, 2)
+
+    if not cart_items:
+        flash("All items in your cart are out of stock.", "warning")
+        return redirect(url_for("shop.shop"))
 
     if request.method == "POST":
         delivery_type    = request.form.get("delivery_type", "collection")
@@ -174,7 +184,7 @@ def checkout():
         if delivery_type == "delivery" and not delivery_address:
             delivery_address = current_user.address
 
-        # Loyalty discount: 100 points = £1, max 20% of order
+        # Loyalty discount calculation
         loyalty_discount = 0.0
         points_used = 0
         if use_loyalty and current_user.loyalty_points >= 100:
@@ -184,52 +194,16 @@ def checkout():
 
         final_total = round(subtotal - loyalty_discount, 2)
 
-        # Create order
-        order = Order(
-            user_id         = current_user.id,
-            total_amount    = final_total,
-            order_status    = "Confirmed",
-            delivery_type   = delivery_type,
-            delivery_address= delivery_address if delivery_type == "delivery" else None,
-        )
-        db.session.add(order)
-        db.session.flush()
+        # Store checkout details in session so payment route can use them
+        session["pending_order"] = {
+            "delivery_type":    delivery_type,
+            "delivery_address": delivery_address if delivery_type == "delivery" else None,
+            "loyalty_discount": loyalty_discount,
+            "points_used":      points_used,
+            "final_total":      final_total,
+        }
 
-        for item in cart_items:
-            oi = OrderItem(
-                order_id   = order.id,
-                product_id = item["product"].id,
-                quantity   = item["quantity"],
-                item_price = item["product"].price,
-            )
-            db.session.add(oi)
-
-            # Deduct stock and log movement
-            item["product"].stock_quantity -= item["quantity"]
-            item["product"].update_availability()
-            movement = StockMovement(
-                product_id    = item["product"].id,
-                change_amount = -item["quantity"],
-                movement_type = "sale",
-                note          = f"Order #{order.id}",
-            )
-            db.session.add(movement)
-
-        # Update loyalty points: deduct used, award earned (1 point per £1 spent)
-        points_earned = int(final_total)
-        current_user.loyalty_points = (current_user.loyalty_points - points_used) + points_earned
-
-        db.session.commit()
-        session.pop("cart", None)
-
-        msg = f"Order #GLH-{order.id:04d} placed! You earned {points_earned} loyalty points."
-        if loyalty_discount > 0:
-            msg += f" Loyalty discount applied: £{loyalty_discount:.2f}."
-        flash(msg, "success")
-
-
-        order_id = oi.order_id
-        return redirect(url_for("shop.success", order_id=order_id))
+        return redirect(url_for("shop.payment"))
 
     # Loyalty context for template
     available_discount = 0.0
@@ -246,17 +220,162 @@ def checkout():
         nav_links=_get_nav(),
     )
 
-@shop_bp.route("/success/<int:order_id>", methods=["GET", "POST"])
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PAYMENT  (Stripe Elements card entry)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@shop_bp.route("/payment", methods=["GET"])
+@login_required
+def payment():
+    pending = session.get("pending_order")
+    if not pending:
+        flash("Please complete checkout first.", "warning")
+        return redirect(url_for("shop.checkout"))
+
+    cart = session.get("cart", {})
+    if not cart:
+        flash("Your cart is empty.", "warning")
+        return redirect(url_for("shop.shop"))
+
+    final_total = pending["final_total"]
+    
+    secret_key = Config.STRIPE_SECRET_KEY
+    # Create a Stripe PaymentIntent
+    stripe.api_key = secret_key
+
+
+    intent = stripe.PaymentIntent.create(
+        amount=int(final_total * 100),   # Stripe uses pence
+        currency="gbp",
+        metadata={
+            "user_id":  current_user.id,
+            "email":    current_user.email,
+        },
+    )
+
+    # Store client_secret in session so confirm route can verify
+    session["stripe_pi"] = intent.id
+
+    return render_template(
+        "payment.html",
+        client_secret=intent.client_secret,
+        stripe_public_key=current_app.config["STRIPE_PUBLIC_KEY"],
+        final_total=final_total,
+        pending=pending,
+        nav_links=_get_nav(),
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PAYMENT CONFIRM  (called after Stripe confirms on the frontend)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@shop_bp.route("/payment/confirm", methods=["POST"])
+@login_required
+def payment_confirm():
+    pending = session.get("pending_order")
+    cart    = session.get("cart", {})
+    pi_id   = session.get("stripe_pi")
+
+    if not pending or not cart or not pi_id:
+        flash("Session expired. Please try again.", "warning")
+        return redirect(url_for("shop.checkout"))
+
+    # Verify payment actually succeeded with Stripe
+    secret_key = Config.STRIPE_SECRET_KEY
+    # Create a Stripe PaymentIntent
+    stripe.api_key = secret_key
+    try:
+        intent = stripe.PaymentIntent.retrieve(pi_id)
+    except stripe.error.StripeError as e:
+        flash(f"Payment verification failed: {e.user_message}", "danger")
+        return redirect(url_for("shop.payment"))
+
+    if intent.status != "succeeded":
+        flash("Payment was not completed. Please try again.", "danger")
+        return redirect(url_for("shop.payment"))
+
+    # ── Build order ──
+    cart_items = []
+    for product_id_str, qty in list(cart.items()):
+        product = db.session.get(Product, int(product_id_str))
+        if not product:
+            continue
+        actual_qty = min(qty, product.stock_quantity)
+        if actual_qty <= 0:
+            continue
+        cart_items.append({
+            "product":  product,
+            "quantity": actual_qty,
+        })
+
+    if not cart_items:
+        flash("All items went out of stock. Your payment will be refunded.", "warning")
+        # Refund the PaymentIntent
+        stripe.Refund.create(payment_intent=pi_id)
+        session.pop("pending_order", None)
+        session.pop("stripe_pi", None)
+        return redirect(url_for("shop.shop"))
+
+    loyalty_discount = pending["loyalty_discount"]
+    points_used      = pending["points_used"]
+    final_total      = pending["final_total"]
+
+    order = Order(
+        user_id          = current_user.id,
+        total_amount     = final_total,
+        order_status     = "Confirmed",
+        delivery_type    = pending["delivery_type"],
+        delivery_address = pending["delivery_address"],
+    )
+    db.session.add(order)
+    db.session.flush()
+
+    for item in cart_items:
+        oi = OrderItem(
+            order_id   = order.id,
+            product_id = item["product"].id,
+            quantity   = item["quantity"],
+            item_price = item["product"].price,
+        )
+        db.session.add(oi)
+        item["product"].stock_quantity -= item["quantity"]
+        item["product"].update_availability()
+        db.session.add(StockMovement(
+            product_id    = item["product"].id,
+            change_amount = -item["quantity"],
+            movement_type = "sale",
+            note          = f"Order #{order.id}",
+        ))
+
+    points_earned = int(final_total)
+    current_user.loyalty_points = (current_user.loyalty_points - points_used) + points_earned
+
+    db.session.commit()
+
+    # Clear session
+    session.pop("cart", None)
+    session.pop("pending_order", None)
+    session.pop("stripe_pi", None)
+
+    msg = f"Order #GLH-{order.id:04d} placed! You earned {points_earned} loyalty points."
+    if loyalty_discount > 0:
+        msg += f" Loyalty discount applied: £{loyalty_discount:.2f}."
+    flash(msg, "success")
+
+    return redirect(url_for("shop.success", order_id=order.id))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SUCCESS
+# ─────────────────────────────────────────────────────────────────────────────
+
+@shop_bp.route("/success/<int:order_id>")
 @login_required
 def success(order_id):
     order = Order.query.get_or_404(order_id)
-    #make sure its the user's order
     if order.user_id != current_user.id:
         flash("Unauthorized access.", "danger")
         return redirect(url_for("auth.login"))
-
-    if order.order_status != "confirmed":
-        return redirect(url_for("shop.checkout", order_id=order_id))
-    
-
-    return render_template("success.html", order=order, nav_links=_get_nav() )
+    return render_template("success.html", order=order, nav_links=_get_nav())

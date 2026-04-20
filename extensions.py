@@ -1,115 +1,375 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_required, current_user
-from models import db, Order, OrderItem
+import stripe
+from flask import Blueprint, render_template, request, session, redirect, url_for, flash, current_app, jsonify
+from flask_login import current_user, login_required
+from models import db, Product, Category, Order, OrderItem, StockMovement
 from datetime import datetime
-from auth import nav_for
+from auth import NAV, nav_for
 
-customer_bp = Blueprint("customer", __name__)
+shop_bp = Blueprint("shop", __name__)
+
+
+def _get_nav():
+    return nav_for(current_user) if current_user.is_authenticated else NAV["public"]
+
+
+def _cart_count():
+    cart = session.get("cart", {})
+    return sum(cart.values())
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CUSTOMER DASHBOARD
+# SHOP LISTING
 # ─────────────────────────────────────────────────────────────────────────────
 
-@customer_bp.route("/dashboard")
-@login_required
-def dashboard():
-    # Recent orders
-    recent_orders = (
-        Order.query
-        .filter_by(user_id=current_user.id)
-        .order_by(Order.order_date.desc())
-        .limit(5)
-        .all()
-    )
+@shop_bp.route("/shop")
+def shop():
+    categories = Category.query.all()
+    category_id = request.args.get("category", type=int)
+    search = request.args.get("search", "").strip()
 
-    total_orders = Order.query.filter_by(user_id=current_user.id).count()
+    query = Product.query
+    if category_id:
+        query = query.filter_by(category_id=category_id)
+    if search:
+        query = query.filter(Product.product_name.ilike(f"%{search}%"))
 
-    total_spent = db.session.query(
-        db.func.sum(Order.total_amount)
-    ).filter_by(user_id=current_user.id).scalar() or 0.0
-
-    # Count unique producers supported (via order items)
-    from models import Product
-    all_order_ids = [o.id for o in Order.query.filter_by(user_id=current_user.id).all()]
-    producers_supported = 0
-    if all_order_ids:
-        producers_supported = db.session.query(
-            db.func.count(db.func.distinct(Product.producer_id))
-        ).join(OrderItem, OrderItem.product_id == Product.id
-        ).filter(OrderItem.order_id.in_(all_order_ids)).scalar() or 0
-
-    # Most recent in-flight order for tracker
-    active_order = (
-        Order.query
-        .filter_by(user_id=current_user.id)
-        .filter(Order.order_status.notin_(["Delivered", "Cancelled"]))
-        .order_by(Order.order_date.desc())
-        .first()
-    )
-
-    # Loyalty credit value (100 points = £1)
-    loyalty_credit = round(current_user.loyalty_points / 100, 2)
+    products = query.order_by(Product.product_name).all()
 
     return render_template(
-        "customer/dashboard.html",
-        user=current_user,
-        recent_orders=recent_orders,
-        total_orders=total_orders,
-        total_spent=round(total_spent, 2),
-        producers_supported=producers_supported,
-        active_order=active_order,
-        loyalty_credit=loyalty_credit,
-        current_date=datetime.now(),
-        nav_links=nav_for(current_user),
+        "shop.html",
+        products=products,
+        categories=categories,
+        selected_category=category_id,
+        search=search,
+        cart_count=_cart_count(),
+        nav_links=_get_nav(),
     )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ORDER HISTORY
+# CART
 # ─────────────────────────────────────────────────────────────────────────────
 
-@customer_bp.route("/orders")
-@login_required
-def orders():
-    all_orders = (
-        Order.query
-        .filter_by(user_id=current_user.id)
-        .order_by(Order.order_date.desc())
-        .all()
-    )
+@shop_bp.route("/cart/add", methods=["POST"])
+def add_to_cart():
+    product_id = str(request.form.get("product_id", ""))
+    try:
+        quantity = int(request.form.get("quantity", 1))
+    except ValueError:
+        quantity = 1
+
+    if not product_id:
+        flash("Invalid product.", "danger")
+        return redirect(url_for("shop.shop"))
+
+    product = db.session.get(Product, int(product_id))
+    if not product or product.stock_quantity <= 0:
+        flash("This product is currently out of stock.", "warning")
+        return redirect(url_for("shop.shop"))
+
+    cart = session.get("cart", {})
+    current_qty = cart.get(product_id, 0)
+    new_qty = current_qty + quantity
+
+    if new_qty > product.stock_quantity:
+        flash(f"Only {product.stock_quantity} units of {product.product_name} available.", "warning")
+        new_qty = product.stock_quantity
+
+    cart[product_id] = new_qty
+    session["cart"] = cart
+    flash(f"Added {product.product_name} to your cart.", "success")
+
+    next_page = request.form.get("next", url_for("shop.shop"))
+    return redirect(next_page)
+
+
+@shop_bp.route("/cart")
+def view_cart():
+    cart = session.get("cart", {})
+    cart_items = []
+    total = 0.0
+
+    for product_id_str, qty in list(cart.items()):
+        product = db.session.get(Product, int(product_id_str))
+        if product:
+            subtotal = round(product.price * qty, 2)
+            total += subtotal
+            cart_items.append({
+                "product": product,
+                "quantity": qty,
+                "subtotal": subtotal,
+            })
+
     return render_template(
-        "customer/orders.html",
-        orders=all_orders,
-        user=current_user,
-        nav_links=nav_for(current_user),
+        "cart.html",
+        cart_items=cart_items,
+        total=round(total, 2),
+        nav_links=_get_nav(),
     )
 
 
+@shop_bp.route("/cart/update", methods=["POST"])
+def update_cart():
+    product_id = str(request.form.get("product_id", ""))
+    try:
+        quantity = int(request.form.get("quantity", 0))
+    except ValueError:
+        quantity = 0
+
+    cart = session.get("cart", {})
+
+    if quantity <= 0:
+        cart.pop(product_id, None)
+    else:
+        product = db.session.get(Product, int(product_id))
+        if product:
+            cart[product_id] = min(quantity, product.stock_quantity)
+
+    session["cart"] = cart
+    return redirect(url_for("shop.view_cart"))
+
+
+@shop_bp.route("/cart/remove", methods=["POST"])
+def remove_from_cart():
+    product_id = str(request.form.get("product_id", ""))
+    cart = session.get("cart", {})
+    removed = cart.pop(product_id, None)
+    session["cart"] = cart
+    if removed:
+        flash("Item removed from cart.", "success")
+    return redirect(url_for("shop.view_cart"))
+
+
 # ─────────────────────────────────────────────────────────────────────────────
-# PROFILE SETTINGS
+# CHECKOUT  (collects delivery info + loyalty choice, then goes to payment)
 # ─────────────────────────────────────────────────────────────────────────────
 
-@customer_bp.route("/profile", methods=["GET", "POST"])
+@shop_bp.route("/checkout", methods=["GET", "POST"])
 @login_required
-def profile():
+def checkout():
+    cart = session.get("cart", {})
+    if not cart:
+        flash("Your cart is empty.", "warning")
+        return redirect(url_for("shop.shop"))
+
+    # Build cart items — recheck stock at this point
+    cart_items = []
+    subtotal = 0.0
+    for product_id_str, qty in list(cart.items()):
+        product = db.session.get(Product, int(product_id_str))
+        if not product:
+            continue
+        actual_qty = min(qty, product.stock_quantity)
+        if actual_qty <= 0:
+            continue
+        line_total = round(product.price * actual_qty, 2)
+        subtotal += line_total
+        cart_items.append({
+            "product": product,
+            "quantity": actual_qty,
+            "subtotal": line_total,
+        })
+    subtotal = round(subtotal, 2)
+
+    if not cart_items:
+        flash("All items in your cart are out of stock.", "warning")
+        return redirect(url_for("shop.shop"))
+
     if request.method == "POST":
-        name    = request.form.get("name", "").strip()
-        phone   = request.form.get("phone", "").strip()
-        address = request.form.get("address", "").strip()
+        delivery_type    = request.form.get("delivery_type", "collection")
+        delivery_address = request.form.get("delivery_address", "").strip()
+        use_loyalty      = request.form.get("use_loyalty") == "on"
 
-        if name and len(name) >= 2:
-            current_user.name = name
-        if address and len(address) >= 5:
-            current_user.address = address
-        if phone:
-            current_user.phone = phone
-        db.session.commit()
-        flash("Profile updated successfully.", "success")
-        return redirect(url_for("customer.profile"))
+        if delivery_type == "delivery" and not delivery_address:
+            delivery_address = current_user.address
+
+        # Loyalty discount calculation
+        loyalty_discount = 0.0
+        points_used = 0
+        if use_loyalty and current_user.loyalty_points >= 100:
+            max_discount = current_user.loyalty_points / 100.0
+            loyalty_discount = min(round(max_discount, 2), round(subtotal * 0.20, 2))
+            points_used = int(loyalty_discount * 100)
+
+        final_total = round(subtotal - loyalty_discount, 2)
+
+        # Store checkout details in session so payment route can use them
+        session["pending_order"] = {
+            "delivery_type":    delivery_type,
+            "delivery_address": delivery_address if delivery_type == "delivery" else None,
+            "loyalty_discount": loyalty_discount,
+            "points_used":      points_used,
+            "final_total":      final_total,
+        }
+
+        return redirect(url_for("shop.payment"))
+
+    # Loyalty context for template
+    available_discount = 0.0
+    if current_user.loyalty_points >= 100:
+        max_discount = current_user.loyalty_points / 100.0
+        available_discount = min(round(max_discount, 2), round(subtotal * 0.20, 2))
 
     return render_template(
-        "customer/profile.html",
-        user=current_user,
-        nav_links=nav_for(current_user),
+        "checkout.html",
+        cart_items=cart_items,
+        subtotal=subtotal,
+        available_discount=available_discount,
+        loyalty_points=current_user.loyalty_points,
+        nav_links=_get_nav(),
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PAYMENT  (Stripe Elements card entry)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@shop_bp.route("/payment", methods=["GET"])
+@login_required
+def payment():
+    pending = session.get("pending_order")
+    if not pending:
+        flash("Please complete checkout first.", "warning")
+        return redirect(url_for("shop.checkout"))
+
+    cart = session.get("cart", {})
+    if not cart:
+        flash("Your cart is empty.", "warning")
+        return redirect(url_for("shop.shop"))
+
+    final_total = pending["final_total"]
+
+    # Create a Stripe PaymentIntent
+    stripe.api_key = current_app.config["STRIPE_SECRET_KEY"]
+    intent = stripe.PaymentIntent.create(
+        amount=int(final_total * 100),   # Stripe uses pence
+        currency="gbp",
+        metadata={
+            "user_id":  current_user.id,
+            "email":    current_user.email,
+        },
+    )
+
+    # Store client_secret in session so confirm route can verify
+    session["stripe_pi"] = intent.id
+
+    return render_template(
+        "payment.html",
+        client_secret=intent.client_secret,
+        stripe_public_key=current_app.config["STRIPE_PUBLIC_KEY"],
+        final_total=final_total,
+        pending=pending,
+        nav_links=_get_nav(),
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PAYMENT CONFIRM  (called after Stripe confirms on the frontend)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@shop_bp.route("/payment/confirm", methods=["POST"])
+@login_required
+def payment_confirm():
+    pending = session.get("pending_order")
+    cart    = session.get("cart", {})
+    pi_id   = session.get("stripe_pi")
+
+    if not pending or not cart or not pi_id:
+        flash("Session expired. Please try again.", "warning")
+        return redirect(url_for("shop.checkout"))
+
+    # Verify payment actually succeeded with Stripe
+    stripe.api_key = current_app.config["STRIPE_SECRET_KEY"]
+    try:
+        intent = stripe.PaymentIntent.retrieve(pi_id)
+    except stripe.error.StripeError as e:
+        flash(f"Payment verification failed: {e.user_message}", "danger")
+        return redirect(url_for("shop.payment"))
+
+    if intent.status != "succeeded":
+        flash("Payment was not completed. Please try again.", "danger")
+        return redirect(url_for("shop.payment"))
+
+    # ── Build order ──
+    cart_items = []
+    for product_id_str, qty in list(cart.items()):
+        product = db.session.get(Product, int(product_id_str))
+        if not product:
+            continue
+        actual_qty = min(qty, product.stock_quantity)
+        if actual_qty <= 0:
+            continue
+        cart_items.append({
+            "product":  product,
+            "quantity": actual_qty,
+        })
+
+    if not cart_items:
+        flash("All items went out of stock. Your payment will be refunded.", "warning")
+        # Refund the PaymentIntent
+        stripe.Refund.create(payment_intent=pi_id)
+        session.pop("pending_order", None)
+        session.pop("stripe_pi", None)
+        return redirect(url_for("shop.shop"))
+
+    loyalty_discount = pending["loyalty_discount"]
+    points_used      = pending["points_used"]
+    final_total      = pending["final_total"]
+
+    order = Order(
+        user_id          = current_user.id,
+        total_amount     = final_total,
+        order_status     = "Confirmed",
+        delivery_type    = pending["delivery_type"],
+        delivery_address = pending["delivery_address"],
+    )
+    db.session.add(order)
+    db.session.flush()
+
+    for item in cart_items:
+        oi = OrderItem(
+            order_id   = order.id,
+            product_id = item["product"].id,
+            quantity   = item["quantity"],
+            item_price = item["product"].price,
+        )
+        db.session.add(oi)
+        item["product"].stock_quantity -= item["quantity"]
+        item["product"].update_availability()
+        db.session.add(StockMovement(
+            product_id    = item["product"].id,
+            change_amount = -item["quantity"],
+            movement_type = "sale",
+            note          = f"Order #{order.id}",
+        ))
+
+    points_earned = int(final_total)
+    current_user.loyalty_points = (current_user.loyalty_points - points_used) + points_earned
+
+    db.session.commit()
+
+    # Clear session
+    session.pop("cart", None)
+    session.pop("pending_order", None)
+    session.pop("stripe_pi", None)
+
+    msg = f"Order #GLH-{order.id:04d} placed! You earned {points_earned} loyalty points."
+    if loyalty_discount > 0:
+        msg += f" Loyalty discount applied: £{loyalty_discount:.2f}."
+    flash(msg, "success")
+
+    return redirect(url_for("shop.success", order_id=order.id))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SUCCESS
+# ─────────────────────────────────────────────────────────────────────────────
+
+@shop_bp.route("/success/<int:order_id>")
+@login_required
+def success(order_id):
+    order = Order.query.get_or_404(order_id)
+    if order.user_id != current_user.id:
+        flash("Unauthorized access.", "danger")
+        return redirect(url_for("auth.login"))
+    return render_template("success.html", order=order, nav_links=_get_nav())

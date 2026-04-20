@@ -68,8 +68,8 @@ NAV = {
     "customer": [
         {"name": "Home",      "url": "/"},
         {"name": "Shop",      "url": "/shop"},
-        {"name": "My Orders", "url": "/orders"},
-        {"name": "Dashboard", "url": "/dashboard"},
+        {"name": "My Orders", "url": "/customer/orders"},
+        {"name": "Dashboard", "url": "/customer/dashboard"},
         {"name": "Logout",    "url": "/logout"},
     ],
     "producer": [
