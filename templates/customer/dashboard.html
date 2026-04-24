@@ -3,11 +3,7 @@
 
 {% block body %}
 <link rel="stylesheet" href="/static/css/dashboard.css">
-<style>
-    .navbar {
-        display : none;
-    }
-</style>
+
 <div class="dashboard-wrapper">
     <aside class="sidebar">
         <div class="sidebar-logo">
@@ -38,15 +34,18 @@
         <header class="content-header">
             <div class="header-left">
                 <p class="current-date">{{day}} {{date}} {{month}}, {{year}}</p>
-                <h2>Welcome Back {{first_name}}</h2>
-                <p class="subtitle">You've supported <strong>8 local farmers</strong> this month</p>
+                <h2>Hi, {{ user.name.split()[0] }} 👋</h2>
+                {% if producers_supported > 0 %}
+                <p class="subtitle">You've supported <strong>{{ producers_supported }} local producer{{ 's' if producers_supported != 1 else '' }}</strong></p>
+                {% else %}
+                <p class="subtitle">Welcome to GreenField Local Hub!</p>
+                {% endif %}
             </div>
             <div class="loyalty-badge">
                 <span class="star">★</span>
                 <div class="points">
-                    <strong>{{user.loyalty_points}} Points</strong>
-                    <span> {{credit}} credit available</span>
-
+                    <strong>{{ user.loyalty_points }} Points</strong>
+                    <span>£{{ "%.2f"|format(loyalty_credit) }} credit available</span>
                 </div>
             </div>
         </header>
@@ -54,49 +53,50 @@
         <section class="stats-grid">
             <div class="stat-card">
                 <span>Total Orders</span>
-                <h3>{{total_orders}}</h3>
-                <p>+0 this month</p>
+                <h3>{{ total_orders }}</h3>
+                <p>Since joining</p>
             </div>
             <div class="stat-card">
-                <span>Total spent</span>
-                <h3>0</h3>
-                <p>Since Joining</p>
+                <span>Total Spent</span>
+                <h3>£{{ "%.0f"|format(total_spent) }}</h3>
+                <p>All time</p>
             </div>
             <div class="stat-card">
-                <span>Farmers Supported</span>
-                <h3>0</h3>
-                <p>This month</p>
+                <span>Producers Supported</span>
+                <h3>{{ producers_supported }}</h3>
+                <p>Local farmers</p>
             </div>
         </section>
 
+        {% if active_order %}
         <section class="order-tracker">
             <div class="tracker-header">
                 <div class="order-id">
-                    <h1>No current Orders</h1>
-                    <!--
-                    <strong>Order #GLH-9928</strong>
-                    <p>Arriving today between 2:00 PM – 4:00 PM</p>
+                    <strong>Order #GLH-{{ "%04d"|format(active_order.id) }}</strong>
+                    <p>{{ active_order.delivery_type|capitalize }} — {{ active_order.order_date.strftime('%d %b %Y') }}</p>
                 </div>
-                <span class="status-pill">Out for delivery</span>
+                <span class="status-pill">{{ active_order.order_status }}</span>
             </div>
+            {% set statuses = ["Confirmed", "Processing", "Out for Delivery", "Delivered"] %}
+            {% set current_idx = statuses.index(active_order.order_status) if active_order.order_status in statuses else 0 %}
+            {% set pct = ((current_idx + 1) / statuses|length * 100)|int %}
             <div class="progress-container">
-                <div class="progress-bar"><div class="fill" style="width: 70%;"></div></div>
+                <div class="progress-bar"><div class="fill" data-width="{{ pct }}"></div></div>
                 <div class="progress-labels">
-                    <span class="step active">Confirmed</span>
-                    <span class="step active">Harvested</span>
-                    <span class="step current">In Transit</span>
-                    <span class="step">Delivered</span>
-                </div>-->
+                    {% for s in statuses %}
+                    <span class="step {% if loop.index0 < current_idx %}active{% elif loop.index0 == current_idx %}current{% endif %}">{{ s }}</span>
+                    {% endfor %}
+                </div>
             </div>
         </section>
+        {% endif %}
 
         <section class="recent-orders">
             <div class="section-header">
                 <h3>Recent Orders</h3>
-                <h1>You do not have any orders yet</h1>
-                <!---
-                <a href="#" class="view-all">View all</a>
+                <a href="{{ url_for('customer.orders') }}" class="view-all">View all</a>
             </div>
+            {% if recent_orders %}
             <table class="orders-table">
                 <thead>
                     <tr>
@@ -104,28 +104,34 @@
                         <th>Order ID</th>
                         <th>Items</th>
                         <th>Total</th>
-                        <th></th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
+                    {% for order in recent_orders %}
                     <tr>
-                        <td>March 10, 2026</td>
-                        <td>#GLH-8841</td>
-                        <td>Milk, Eggs, Sourdough...</td>
-                        <td>£24.50</td>
-                        <td><button class="btn-reorder">Re-order</button></td>
+                        <td>{{ order.order_date.strftime('%d %b %Y') }}</td>
+                        <td>#GLH-{{ "%04d"|format(order.id) }}</td>
+                        <td>
+                            {% set names = order.order_items[:3]|map(attribute='product.product_name')|list %}
+                            {{ names|join(', ') }}{% if order.order_items|length > 3 %}...{% endif %}
+                        </td>
+                        <td>£{{ "%.2f"|format(order.total_amount) }}</td>
+                        <td><span class="status-pill status-{{ order.order_status|lower|replace(' ', '-') }}">{{ order.order_status }}</span></td>
                     </tr>
-                    <tr>
-                        <td>March 3, 2026</td>
-                        <td>#GLH-7720</td>
-                        <td>Honey, Heirloom Apples</td>
-                        <td>£14.20</td>
-                        <td><button class="btn-reorder">Re-order</button></td>
-                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
-        -->
+            {% else %}
+            <p class="no-data">No orders yet. <a href="{{ url_for('shop.shop') }}">Start shopping!</a></p>
+            {% endif %}
         </section>
     </main>
+</div>
+<script>
+    document.querySelectorAll('.fill[data-width]').forEach(function(el) {
+        el.style.width = el.getAttribute('data-width') + '%';
+    });
+</script>
 </div>
 {% endblock %}

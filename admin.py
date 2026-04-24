@@ -120,9 +120,7 @@ def dashboard():
     )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # MANAGE ACCOUNTS  (view + create producer)
-# ─────────────────────────────────────────────────────────────────────────────
 
 @admin_bp.route("/manage-accounts")
 @login_required
@@ -143,9 +141,7 @@ def manage_accounts():
     )
 
 
-#__________________________________________________________________________
 #creating a producer account
-#__________________________________________________________________________
 
 @admin_bp.route("/create-producer", methods=["POST"])
 
@@ -210,7 +206,7 @@ def toggle_active(user_id):
         flash(f"Account for {target.name} has been {status}.", "success")
     return redirect(url_for("admin.manage_accounts"))
 
-
+#the login route
 @admin_bp.route("/manage-accounts/<int:user_id>/change-role", methods=["POST"])
 @login_required
 def change_role(user_id):
@@ -235,9 +231,7 @@ def change_role(user_id):
 
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # MANAGE PRODUCTS  (add / edit / stock / delete — across all producers)
-# ─────────────────────────────────────────────────────────────────────────────
 
 @admin_bp.route("/manage-products", methods=["GET", "POST"])
 @admin_required
@@ -378,7 +372,6 @@ def manage_products():
 
 
 # MANAGE ORDERS
-# ─────────────────────────────────────────────────────────────────────────────
 
 @admin_bp.route("/orders")
 @admin_required

@@ -21,9 +21,7 @@ def producer_required(f):
     return decorated
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # PRODUCER DASHBOARD
-# ─────────────────────────────────────────────────────────────────────────────
 
 @producer_bp.route("/dashboard")
 @producer_required
@@ -66,9 +64,7 @@ def dashboard():
     )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # MANAGE STOCK
-# ─────────────────────────────────────────────────────────────────────────────
 
 @producer_bp.route("/manage-stock", methods=["GET", "POST"])
 @producer_required
@@ -208,9 +204,7 @@ def manage_stock():
     )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # PRODUCER ACCOUNT SETTINGS
-# ─────────────────────────────────────────────────────────────────────────────
 
 @producer_bp.route("/settings", methods=["GET", "POST"])
 @producer_required

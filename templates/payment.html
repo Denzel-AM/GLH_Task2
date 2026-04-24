@@ -1,299 +1,571 @@
 {% extends "base.html" %}
-{% block title %}Payment – GLH{% endblock %}
+{% block head %}Order Confirmed – GreenField Local Hub{% endblock %}
 
-
-
-{% block body %}
-<div class="page">
-
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://js.stripe.com/v3/"></script>
+{% block extra_head %}
 <style>
+  :root {
+    --cream: #f9f5ef;
+    --ink: #1a1a1a;
+    --forest: #2d5a3d;
+    --forest-light: #3d7a52;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --muted: #6b6b6b;
+    --border: #e0d8cc;
+    --white: #ffffff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
   body {
-    background: #f7f7f5;
-    font-family: 'DM Sans', sans-serif;
-    color: #1a1a1a;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
   }
 
-  .page {
-    max-width: 460px;
-    margin: 60px auto;
-    padding: 0 20px 80px;
-  }
-
-  /* Back link */
-  .back {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.85rem;
-    color: #888;
-    text-decoration: none;
-    margin-bottom: 32px;
-  }
-  .back:hover { color: #1a1a1a; }
-  .back svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
-
-  h1 {
-    font-size: 1.5rem;
-    font-weight: 500;
-    margin-bottom: 4px;
-  }
-
-  .subtitle {
-    font-size: 0.875rem;
-    color: #888;
-    margin-bottom: 32px;
-  }
-
-  /* Order summary */
-  .summary {
-    background: #fff;
-    border: 1px solid #e5e5e5;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 24px;
-  }
-
-  .summary-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.875rem;
-    color: #555;
-    margin-bottom: 10px;
-  }
-
-  .summary-row:last-child { margin-bottom: 0; }
-
-  .summary-row.total {
-    font-size: 1rem;
-    font-weight: 500;
-    color: #1a1a1a;
-    padding-top: 10px;
-    border-top: 1px solid #e5e5e5;
-    margin-top: 10px;
-  }
-
-  .discount { color: #2d7a4f; }
-
-  /* Card form */
-  .card-form {
-    background: #fff;
-    border: 1px solid #e5e5e5;
-    border-radius: 12px;
-    padding: 24px;
-    margin-bottom: 16px;
-  }
-
-  .field { margin-bottom: 18px; }
-  .field:last-child { margin-bottom: 0; }
-
-  label {
-    display: block;
-    font-size: 0.78rem;
-    font-weight: 500;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 8px;
-  }
-
-  input[type="text"] {
-    width: 100%;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 11px 14px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.92rem;
-    color: #1a1a1a;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-
-  input[type="text"]:focus { border-color: #aaa; }
-
-  .stripe-mount {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 11px 14px;
-    transition: border-color 0.15s;
-  }
-
-  .stripe-mount.StripeElement--focus  { border-color: #aaa; }
-  .stripe-mount.StripeElement--invalid { border-color: #dc2626; }
-
-  /* Error */
-  #error-box {
-    display: none;
-    background: #fef2f2;
-    border: 1px solid #fca5a5;
-    border-radius: 8px;
-    padding: 11px 14px;
-    font-size: 0.85rem;
-    color: #dc2626;
-    margin-bottom: 16px;
-  }
-  #error-box.show { display: block; }
-
-  /* Pay button */
-  .pay-btn {
-    width: 100%;
-    background: #1a1a1a;
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    padding: 14px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.95rem;
-    font-weight: 500;
-    cursor: pointer;
+  /* ── PAGE LAYOUT ── */
+  .success-page {
+    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    transition: background 0.15s;
+    padding: 60px 20px;
+    position: relative;
+    overflow: hidden;
   }
 
-  .pay-btn:hover:not(:disabled) { background: #333; }
-  .pay-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-
-  .spinner {
-    display: none;
-    width: 16px; height: 16px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-top-color: #fff;
+  /* Background decorative circles */
+  .success-page::before,
+  .success-page::after {
+    content: '';
+    position: fixed;
     border-radius: 50%;
-    animation: spin 0.65s linear infinite;
+    pointer-events: none;
+    z-index: 0;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .success-page::before {
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(45,90,61,0.07) 0%, transparent 70%);
+    top: -150px; right: -150px;
+  }
+  .success-page::after {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+    bottom: -100px; left: -100px;
+  }
 
-  .pay-btn.loading .label   { display: none; }
-  .pay-btn.loading .spinner { display: block; }
+  /* ── CARD ── */
+  .card {
+    position: relative;
+    z-index: 1;
+    background: var(--white);
+    border-radius: 24px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.04), 0 20px 60px rgba(0,0,0,0.08);
+    max-width: 640px;
+    width: 100%;
+    overflow: hidden;
+    animation: slideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
 
-  .stripe-note {
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(32px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── CARD HEADER ── */
+  .card-header {
+    background: var(--forest);
+    padding: 48px 40px 40px;
     text-align: center;
-    font-size: 0.78rem;
-    color: #bbb;
-    margin-top: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 20px,
+      rgba(255,255,255,0.02) 20px,
+      rgba(255,255,255,0.02) 40px
+    );
+  }
+
+  /* Animated checkmark */
+  .check-wrap {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    border: 2px solid rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px;
+    position: relative;
+    animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both;
+  }
+
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.5); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .check-wrap svg {
+    width: 38px; height: 38px;
+    stroke: var(--gold-light);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Draw-on animation for checkmark path */
+  .check-path {
+    stroke-dasharray: 50;
+    stroke-dashoffset: 50;
+    animation: drawCheck 0.5s ease 0.7s forwards;
+  }
+
+  @keyframes drawCheck {
+    to { stroke-dashoffset: 0; }
+  }
+
+  .card-header h1 {
+    font-size: 2rem;
+    color: var(--white);
+    margin-bottom: 8px;
+    position: relative;
+  }
+
+  .card-header p {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.95rem;
+    font-weight: 300;
+    position: relative;
+  }
+
+  /* ── ORDER BADGE ── */
+  .order-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--gold);
+    color: var(--ink);
+    font-weight: 500;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 100px;
+    margin-top: 18px;
+    position: relative;
+  }
+
+  /* ── CARD BODY ── */
+  .card-body {
+    padding: 36px 40px 40px;
+  }
+
+  /* ── DETAILS GRID ── */
+  .details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 28px;
+    animation: fadeIn 0.4s ease 0.5s both;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .detail-cell {
+    background: var(--white);
+    padding: 18px 22px;
+  }
+
+  .detail-cell:nth-child(1),
+  .detail-cell:nth-child(2) {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .detail-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+
+  .detail-value {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .detail-value.highlight {
+    color: var(--forest);
+    font-size: 1.1rem;
+  }
+
+  /* ── STATUS PILL ── */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 0.82rem;
+    font-weight: 500;
+  }
+
+  .status-pill.confirmed {
+    background: #eaf4ee;
+    color: var(--forest);
+  }
+
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--forest-light);
+    animation: pulse 2s ease infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  /* ── DELIVERY BANNER ── */
+  .delivery-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: #f5f0e8;
+    border: 1px solid #e8dfc8;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 28px;
+    animation: fadeIn 0.4s ease 0.6s both;
+  }
+
+  .delivery-banner svg {
+    width: 20px; height: 20px;
+    stroke: var(--gold);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .delivery-banner-text {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .delivery-banner-text strong {
+    display: block;
+    color: var(--ink);
+    font-size: 0.92rem;
+    margin-bottom: 2px;
+  }
+
+  /* ── LOYALTY STRIP ── */
+  .loyalty-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, var(--forest) 0%, var(--forest-light) 100%);
+    border-radius: 12px;
+    padding: 16px 22px;
+    margin-bottom: 28px;
+    animation: fadeIn 0.4s ease 0.7s both;
+  }
+
+  .loyalty-strip-label {
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.75);
+    margin-bottom: 3px;
+  }
+
+  .loyalty-strip-points {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: var(--gold-light);
+  }
+
+  .loyalty-strip-icon {
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .loyalty-strip-icon svg {
+    width: 20px; height: 20px;
+    stroke: var(--gold-light);
+    fill: none;
+  }
+
+  /* ── ORDER ITEMS ── */
+  .order-items-section {
+    margin-bottom: 28px;
+    animation: fadeIn 0.4s ease 0.65s both;
+  }
+
+  .order-items-title {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+
+  .order-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+
+  .order-items-table th {
+    text-align: left;
+    padding: 8px 10px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .order-items-table td {
+    padding: 10px 10px;
+    color: var(--ink);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .order-items-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .order-total-row td {
+    padding-top: 12px;
+    border-top: 2px solid var(--border);
+    border-bottom: none !important;
+    color: var(--forest);
+  }
+
+  /* ── ACTIONS ── */
+  .actions {
+    display: flex;
+    gap: 12px;
+    animation: fadeIn 0.4s ease 0.8s both;
+  }
+
+  .btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 500;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary {
+    background: var(--forest);
+    color: var(--white);
+  }
+
+  .btn-primary:hover {
+    background: var(--forest-light);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(45,90,61,0.25);
+  }
+
+  .btn-secondary {
+    background: var(--cream);
+    color: var(--ink);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    background: var(--border);
+    transform: translateY(-1px);
+  }
+
+  .btn svg {
+    width: 16px; height: 16px;
+    stroke: currentColor;
+    fill: none;
+    flex-shrink: 0;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 480px) {
+    .card-header { padding: 36px 24px 30px; }
+    .card-body   { padding: 28px 24px 32px; }
+    .card-header h1 { font-size: 1.6rem; }
+    .details-grid { grid-template-columns: 1fr; }
+    .detail-cell:nth-child(1),
+    .detail-cell:nth-child(2) { border-bottom: 1px solid var(--border); }
+    .detail-cell:nth-child(2) { border-bottom: none; }
+    .actions { flex-direction: column; }
   }
 </style>
+{% endblock %}
 
-  <a href="{{ url_for('shop.checkout') }}" class="back">
-    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="15 18 9 12 15 6"/>
-    </svg>
-    Back to checkout
-  </a>
+{% block body %}
+<div class="success-page">
+  <div class="card">
 
-  <h1>Payment</h1>
-  <p class="subtitle">
-    {% if pending.delivery_type == 'delivery' %}
-      Delivering to {{ pending.delivery_address }}
-    {% else %}
-      Collection order
-    {% endif %}
-  </p>
-
-  <!-- Order summary -->
-  <div class="summary">
-    <div class="summary-row">
-      <span>Subtotal</span>
-      <span>£{{ "%.2f"|format(pending.final_total + pending.loyalty_discount) }}</span>
+    <!-- Header -->
+    <div class="card-header">
+      <div class="check-wrap">
+        <svg viewBox="0 0 38 38">
+          <polyline class="check-path" points="8,19 16,27 30,11"/>
+        </svg>
+      </div>
+      <h1>Order Confirmed</h1>
+      <p>Thank you! We've received your order and it's being prepared.</p>
+      <div class="order-badge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        GLH-{{ "%04d"|format(order.id) }}
+      </div>
     </div>
-    {% if pending.loyalty_discount > 0 %}
-    <div class="summary-row">
-      <span>Loyalty discount</span>
-      <span class="discount">−£{{ "%.2f"|format(pending.loyalty_discount) }}</span>
-    </div>
-    {% endif %}
-    <div class="summary-row total">
-      <span>Total</span>
-      <span>£{{ "%.2f"|format(pending.final_total) }}</span>
+
+    <!-- Body -->
+    <div class="card-body">
+
+      <!-- Details Grid -->
+      <div class="details-grid">
+        <div class="detail-cell">
+          <div class="detail-label">Order Total</div>
+          <div class="detail-value highlight">£{{ "%.2f"|format(order.total_amount) }}</div>
+        </div>
+        <div class="detail-cell">
+          <div class="detail-label">Status</div>
+          <div class="detail-value">
+            <span class="status-pill confirmed">
+              <span class="status-dot"></span>
+              {{ order.order_status }}
+            </span>
+          </div>
+        </div>
+        <div class="detail-cell">
+          <div class="detail-label">Order Date</div>
+          <div class="detail-value">{{ order.order_date.strftime('%d %b %Y') }}</div>
+        </div>
+        <div class="detail-cell">
+          <div class="detail-label">Fulfilment</div>
+          <div class="detail-value">{{ order.delivery_type | capitalize }}</div>
+        </div>
+      </div>
+
+      <!-- Delivery address (if applicable) -->
+      {% if order.delivery_type == 'delivery' and order.delivery_address %}
+      <div class="delivery-banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+          <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <div class="delivery-banner-text">
+          <strong>Delivering to</strong>
+          {{ order.delivery_address }}
+        </div>
+      </div>
+      {% elif order.delivery_type == 'collection' %}
+      <div class="delivery-banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        <div class="delivery-banner-text">
+          <strong>Collection order</strong>
+          We'll let you know when your order is ready to collect.
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Order items -->
+      <div class="order-items-section">
+        <div class="order-items-title">Order Summary</div>
+        <table class="order-items-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Qty</th>
+              <th>Unit Price</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in order.order_items %}
+            <tr>
+              <td>{{ item.product.product_name }}</td>
+              <td>× {{ item.quantity }}</td>
+              <td>£{{ "%.2f"|format(item.item_price) }}</td>
+              <td>£{{ "%.2f"|format(item.item_price * item.quantity) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr class="order-total-row">
+              <td colspan="3"><strong>Total Paid</strong></td>
+              <td><strong>£{{ "%.2f"|format(order.total_amount) }}</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- Loyalty points earned -->
+      <div class="loyalty-strip">
+        <div>
+          <div class="loyalty-strip-label">Loyalty points earned</div>
+          <div class="loyalty-strip-points">+{{ order.total_amount | int }} pts</div>
+        </div>
+        <div class="loyalty-strip-icon">
+          <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions">
+        <a href="{{ url_for('shop.shop') }}" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 01-8 0"/>
+          </svg>
+          Continue Shopping
+        </a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          My Account
+        </a>
+      </div>
+
     </div>
   </div>
-
-  <!-- Card form -->
-  <div class="card-form">
-    <div class="field">
-      <label for="cardholder-name">Name on card</label>
-      <input type="text" id="cardholder-name" placeholder="{{ current_user.name }}" autocomplete="cc-name">
-    </div>
-    <div class="field">
-      <label>Card details</label>
-      <div id="card-element" class="stripe-mount"></div>
-    </div>
-  </div>
-
-  <div id="error-box"></div>
-
-  <button id="pay-btn" class="pay-btn">
-    <span class="label">Pay £{{ "%.2f"|format(pending.final_total) }}</span>
-    <div class="spinner"></div>
-  </button>
-
-  <p class="stripe-note">Secured by Stripe · SSL encrypted</p>
-
 </div>
-
-<script>
-  const stripe   = Stripe("{{ stripe_public_key }}");
-  const elements = stripe.elements();
-
-  const card = elements.create("card", {
-    style: {
-      base: {
-        fontFamily: "'DM Sans', sans-serif",
-        fontSize: "15px",
-        color: "#1a1a1a",
-        "::placeholder": { color: "#bbb" }
-      },
-      invalid: { color: "#dc2626" }
-    }
-  });
-
-  card.mount("#card-element");
-
-  const btn      = document.getElementById("pay-btn");
-  const errorBox = document.getElementById("error-box");
-
-  function showError(msg) {
-    errorBox.textContent = msg;
-    errorBox.classList.add("show");
-    btn.classList.remove("loading");
-    btn.disabled = false;
-  }
-
-  btn.addEventListener("click", async () => {
-    btn.disabled = true;
-    btn.classList.add("loading");
-    errorBox.classList.remove("show");
-
-    const name = document.getElementById("cardholder-name").value.trim() || "{{ current_user.name }}";
-
-    const { paymentIntent, error } = await stripe.confirmCardPayment("{{ client_secret }}", {
-      payment_method: {
-        card,
-        billing_details: { name, email: "{{ current_user.email }}" }
-      }
-    });
-
-    if (error) { showError(error.message); return; }
-
-    if (paymentIntent.status === "succeeded") {
-      const resp = await fetch("{{ url_for('shop.payment_confirm') }}", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": document.cookie.match(/csrf_token=([^;]+)/)?.[1] ?? ""
-        },
-        body: JSON.stringify({ payment_intent_id: paymentIntent.id })
-      });
-      window.location.href = resp.url || "/";
-    } else {
-      showError("Payment incomplete. Please try again.");
-      btn.classList.remove("loading");
-      btn.disabled = false;
-    }
-  });
-</script>
 {% endblock %}

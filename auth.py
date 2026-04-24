@@ -339,6 +339,7 @@ def account_settings():
         nav_links=nav_for(current_user),
     )
 
+#update account
 @auth_bp.route("/account/update", methods=["POST"])
 @login_required
 def update_account():
@@ -383,9 +384,6 @@ def update_account():
     return redirect(url_for("auth.account_settings"))
 
 
-
-
-
 @auth_bp.route("/forgot-password", methods=["GET", "POST"])
 def forgot_password():
     """
@@ -420,53 +418,7 @@ def forgot_password():
     return render_template("auth/forgot_password.html", nav_links=NAV["login"])
 
 
-
-
-@auth_bp.route("/reset-password/<token>", methods=["GET", "POST"])
-def reset_password(token: str):
-    """
-    Step 2 of the password reset flow.
-    Validates the token, then lets the user choose a new password.
-    """
-    if current_user.is_authenticated:
-        return redirect(_dashboard_url_for(current_user))
-
-    user = _verify_reset_token(token)
-    if user is None:
-        flash("This reset link is invalid or has expired. Please request a new one.", "danger")
-        return redirect(url_for("auth.forgot_password"))
-
-    if request.method == "POST":
-        new_password     = request.form.get("new_password", "")
-        confirm_password = request.form.get("confirm_password", "")
-
-        if new_password != confirm_password:
-            flash("Passwords do not match.", "danger")
-            return render_template("auth/reset_password.html", token=token, nav_links=NAV["login"])
-
-        if not is_valid_password(new_password):
-            flash(
-                "Password must be at least 8 characters and include an uppercase letter, "
-                "a lowercase letter, a number, and a special character.",
-                "danger",
-            )
-            return render_template("auth/reset_password.html", token=token, nav_links=NAV["login"])
-
-        user.set_password(new_password)
-        db.session.commit()
-
-        flash("Password reset successfully. Please sign in with your new password.", "success")
-        return redirect(url_for("auth.login"))
-
-    return render_template("auth/reset_password.html", token=token, nav_links=NAV["login"])
-
-
-
-#__________________________________________________________________________
 #delete account
-#______________________________________________________________________
-
-
 
 
 @auth_bp.route("/account/delete", methods=["POST"])
@@ -500,67 +452,3 @@ def delete_account():
 
     flash("Your account and all associated data have been permanently deleted.", "success")
     return redirect(url_for("auth.login"))
-
-# ─────────────────────────────────────────────────────────────────────────────
-# PASSWORD RESET TOKEN HELPERS
-# ─────────────────────────────────────────────────────────────────────────────
-
-import hashlib
-import hmac
-import time
-from flask import current_app
-
-# Re-export Loyalty for use in register route above
-from models import Loyalty
-
-_RESET_TOKEN_MAX_AGE_SECONDS = 3600   # 1 hour
-
-
-def _generate_reset_token(user: User) -> str:
-    """
-    Build a signed token: base64( user_id | timestamp | HMAC-SHA256 ).
-    No extra dependency required — uses only Python stdlib.
-    """
-    import base64
-    ts      = int(time.time())
-    payload = f"{user.id}:{ts}"
-    sig     = _sign(payload)
-    raw     = f"{payload}:{sig}"
-    return base64.urlsafe_b64encode(raw.encode()).decode()
-
-
-def _verify_reset_token(token: str):
-    """Return the User if the token is valid and unexpired, else None."""
-    import base64
-    try:
-        raw = base64.urlsafe_b64decode(token.encode()).decode()
-        user_id_str, ts_str, sig = raw.rsplit(":", 2)
-        payload = f"{user_id_str}:{ts_str}"
-
-        expected = _sign(payload)
-        if not hmac.compare_digest(expected, sig):
-            return None
-
-        if time.time() - int(ts_str) > _RESET_TOKEN_MAX_AGE_SECONDS:
-            return None
-
-        return db.session.get(User, int(user_id_str))
-
-    except Exception:
-        return None
-
-def _sign(payload: str) -> str:
-    """HMAC-SHA256 signature using the app's SECRET_KEY."""
-    key = current_app.secret_key
-    if isinstance(key, str):
-        key = key.encode()
-    return hmac.new(key, payload.encode(), hashlib.sha256).hexdigest()
-
-
-def _send_reset_email(user: User, token: str) -> None:
-    """
-    Sends a password reset link. In development, the link is printed to console.
-    Replace with your email provider (Flask-Mail, SendGrid, etc.) for production.
-    """
-    reset_url = url_for("auth.reset_password", token=token, _external=True)
-    print(f"[GLH DEV] Password reset link for {user.email}: {reset_url}")

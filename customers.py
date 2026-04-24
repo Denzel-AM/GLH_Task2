@@ -58,6 +58,35 @@ def dashboard():
         .limit(5)
         .all()
     )
+    
+    # the total orders
+    total_orders = Order.query.filter_by(user_id=current_user.id).count()
+
+    total_spent = db.session.query(
+        db.func.sum(Order.total_amount)
+    ).filter_by(user_id=current_user.id).scalar() or 0.0
+
+    # Count unique producers supported (via order items)
+    from models import Product
+    all_order_ids = [o.id for o in Order.query.filter_by(user_id=current_user.id).all()]
+    producers_supported = 0
+    if all_order_ids:
+        producers_supported = db.session.query(
+            db.func.count(db.func.distinct(Product.producer_id))
+        ).join(OrderItem, OrderItem.product_id == Product.id
+        ).filter(OrderItem.order_id.in_(all_order_ids)).scalar() or 0
+
+    # Most recent in-flight order for tracker
+    active_order = (
+        Order.query
+        .filter_by(user_id=current_user.id)
+        .filter(Order.order_status.notin_(["Delivered", "Cancelled"]))
+        .order_by(Order.order_date.desc())
+        .first()
+    )
+
+    # Loyalty credit value (100 points = £1)
+    loyalty_credit = round(current_user.loyalty_points / 100, 2)
 
     #all order
     total_orders = Order.query.filter_by(user_id=current_user.id).count()
@@ -81,10 +110,10 @@ def dashboard():
 
     initials = ''.join(word[0] for word in words if word)
     loyalty_points = current_user.loyalty_points
-    credit = loyalty_points/100
+    
+
     return render_template(
         "customer/dashboard.html",
-        nav_links        = nav_for(current_user),
         user = current_user,
         day = day_of_week,
         month = month_name,
@@ -93,7 +122,14 @@ def dashboard():
         first_name = first_name,
         initials = initials,
         credit = loyalty_points,
-        total_orders = total_orders
+        recent_orders=recent_orders,
+        total_orders=total_orders,
+        total_spent=round(total_spent, 2),
+        producers_supported=producers_supported,
+        active_order=active_order,
+        loyalty_credit=loyalty_credit,
+        current_date=datetime.now(),
+        nav_links=nav_for(current_user)
     )
 
 

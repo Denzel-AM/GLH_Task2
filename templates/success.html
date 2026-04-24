@@ -1,9 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Order Confirmed – GLH{% endblock %}
+{% block title %}Order Confirmed – GreenField Local Hub{% endblock %}
+
+
+
 
 
 {% block body %}
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
     --cream: #f9f5ef;
@@ -21,7 +23,6 @@
 
   body {
     background: var(--cream);
-    font-family: 'DM Sans', sans-serif;
     color: var(--ink);
     min-height: 100vh;
   }
@@ -135,7 +136,6 @@
   }
 
   .card-header h1 {
-    font-family: 'Playfair Display', serif;
     font-size: 2rem;
     color: var(--white);
     margin-bottom: 8px;
@@ -156,7 +156,6 @@
     gap: 8px;
     background: var(--gold);
     color: var(--ink);
-    font-family: 'DM Sans', sans-serif;
     font-weight: 500;
     font-size: 0.85rem;
     letter-spacing: 0.08em;
@@ -217,7 +216,6 @@
 
   .detail-value.highlight {
     color: var(--forest);
-    font-family: 'Playfair Display', serif;
     font-size: 1.1rem;
   }
 
@@ -317,6 +315,54 @@
     width: 20px; height: 20px;
     stroke: var(--gold-light);
     fill: none;
+  }
+
+  /* ── ORDER ITEMS ── */
+  .order-items-section {
+    margin-bottom: 28px;
+    animation: fadeIn 0.4s ease 0.65s both;
+  }
+
+  .order-items-title {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+
+  .order-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+
+  .order-items-table th {
+    text-align: left;
+    padding: 8px 10px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .order-items-table td {
+    padding: 10px 10px;
+    color: var(--ink);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .order-items-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .order-total-row td {
+    padding-top: 12px;
+    border-top: 2px solid var(--border);
+    border-bottom: none !important;
+    color: var(--forest);
   }
 
   /* ── ACTIONS ── */
@@ -456,6 +502,37 @@
         </div>
       </div>
       {% endif %}
+
+      <!-- Order items -->
+      <div class="order-items-section">
+        <div class="order-items-title">Order Summary</div>
+        <table class="order-items-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Qty</th>
+              <th>Unit Price</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in order.order_items %}
+            <tr>
+              <td>{{ item.product.product_name }}</td>
+              <td>× {{ item.quantity }}</td>
+              <td>£{{ "%.2f"|format(item.item_price) }}</td>
+              <td>£{{ "%.2f"|format(item.item_price * item.quantity) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr class="order-total-row">
+              <td colspan="3"><strong>Total Paid</strong></td>
+              <td><strong>£{{ "%.2f"|format(order.total_amount) }}</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
 
       <!-- Loyalty points earned -->
       <div class="loyalty-strip">
